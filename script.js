@@ -1,5 +1,5 @@
 // ================== CONFIG ==================
-const LOJA_API_URL = 'https://serverfc.onrender.com';
+const LOJA_API_URL = 'https://serverfc.onrender.com/api';
 
 // Inicializa o carrinho globalmente
 let cart = JSON.parse(localStorage.getItem('fatalCart')) || [];

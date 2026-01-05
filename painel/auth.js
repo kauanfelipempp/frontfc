@@ -2,7 +2,7 @@
 
 // SOLUÇÃO DO ERRO: Vamos definir a URL aqui dentro para garantir.
 // Não use 'const' se estiver com medo de conflito, use 'var' ou direto na string.
-var AUTH_API_URL = 'https://serverfc.onrender.com';
+var AUTH_API_URL = 'https://serverfc.onrender.com/api';
 
 console.log("✅ Auth.js carregado!");
 
