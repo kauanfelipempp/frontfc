@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Ajuda | FATAL COMPANY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="../../arquivos/imagens/logofinal.svg" type="image/x-icon">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #ccc;
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* Estilo Unificado do Botão */
+        a.back-btn {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            border: 1px solid #333;
+            padding: 10px 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        a.back-btn:hover {
+            background: white;
+            color: black;
+            border-color: white;
+        }
+
+        /* Estilo da Sanfona (FAQ) - Mantido */
+        details {
+            background: #111;
+            margin-bottom: 10px;
+            border: 1px solid #222;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+
+        details:hover {
+            border-color: #333;
+        }
+
+        summary {
+            padding: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: '+';
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        details[open] summary::after {
+            content: '-';
+            color: #00bfff;
+            /* Detalhe em ciano quando aberto */
+        }
+
+        details[open] summary {
+            border-bottom: 1px solid #222;
+        }
+
+        .faq-content {
+            padding: 20px;
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="../index.html" class="back-btn">← Voltar para a Loja</a>
+
+    <h1>Central de Ajuda</h1>
+
+    <details>
+        <summary>Qual o prazo de entrega?</summary>
+        <div class="faq-content">
+            O prazo varia de acordo com o seu CEP. Para capitais, geralmente de 3 a 5 dias úteis. Para o interior, de 5
+            a 10 dias úteis. Você pode calcular o prazo exato no carrinho de compras.
+        </div>
+    </details>
+
+    <details>
+        <summary>Como rastreio meu pedido?</summary>
+        <div class="faq-content">
+            Assim que seu pedido for despachado, você receberá um código de rastreio por e-mail. Você também pode clicar
+            em "Rastrear Pedido" no menu do site e inserir o ID da sua compra.
+        </div>
+    </details>
+
+    <details>
+        <summary>Quais as formas de pagamento?</summary>
+        <div class="faq-content">
+            Aceitamos PIX (aprovação imediata), Cartão de Crédito (até 3x sem juros) e Boleto Bancário. Todas as
+            transações são processadas de forma segura pelo Mercado Pago.
+        </div>
+    </details>
+
+    <details>
+        <summary>Os produtos são originais?</summary>
+        <div class="faq-content">
+            Sim. A Fatal Company desenha, produz e distribui suas próprias peças. Garantimos a exclusividade e a
+            qualidade de cada item do nosso drop.
+        </div>
+    </details>
+
+    <div
+        style="margin-top: 40px; padding: 20px; background: #0a0a0a; text-align: center; border: 1px dashed #333; border-radius: 4px;">
+        <p style="margin-bottom: 10px;">Ainda tem dúvidas?</p>
+        <a href="mailto:suporte@fatalcompany.com"
+            style="color: #00bfff; text-decoration: none; font-weight: bold;">2025fatalcompany@gmail.com</a>
+    </div>
+
+</body>
+
+</html>

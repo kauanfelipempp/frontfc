@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FATAL COMPANY ©</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="../arquivos/imagens/logofinal.svg" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* --- CSS DO CHECKOUT (Mantido) --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            padding: 30px;
+            border: 1px solid #333;
+            width: 95%;
+            max-width: 500px;
+            position: relative;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #fff;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #ff4444;
+        }
+
+        .checkout-title {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            font-size: 1.8rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: #111;
+            border: 1px solid #333;
+            color: white;
+            font-family: sans-serif;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: white;
+        }
+
+        .form-group input:disabled {
+            background: #050505;
+            color: #555;
+            cursor: not-allowed;
+        }
+
+        .checkout-summary {
+            background: #111;
+            padding: 20px;
+            margin: 25px 0;
+            border: 1px dashed #333;
+        }
+
+        .checkout-summary p {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .total-line {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .btn-finalizar {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: black;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Oswald', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .btn-finalizar:hover {
+            background: #ccc;
+            letter-spacing: 4px;
+        }
+
+        .cupom-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-cupom {
+            padding: 0 20px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .btn-cupom:hover {
+            background: #555;
+        }
+
+        /* --- NOVO CSS DO CARRINHO E ÍCONE --- */
+
+        /* Ícone da Sacola */
+        .cart-icon-container {
+            position: relative;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .cart-icon-container:hover {
+            transform: scale(1.1);
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4444;
+            /* Vermelho Fatal */
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            /* Borda para separar do fundo */
+        }
+
+        /* Sidebar do Carrinho */
+        .cart-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .cart-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            /* Começa escondido na direita */
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 1001;
+            transition: right 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            /* Efeito suave */
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #333;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .cart-sidebar.active {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+        }
+
+        .cart-header h3 {
+            margin: 0;
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .close-cart-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .cart-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 1px solid #333;
+            background: #111;
+        }
+
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: black;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .checkout-btn:hover {
+            background: #ccc;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+
+        .continue-btn:hover {
+            border-color: #fff;
+            color: #fff;
+        }
+
+        /* Ajuste para Mobile */
+        @media (max-width: 768px) {
+            .cart-sidebar {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="../arquivos/imagens/logofinal.svg" alt="Logo" class="brand-logo">
+            </a>
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="#shop">Drop 01</a></li>
+            <li class="mobile-cart"><a href="#" onclick="toggleCart()">CARRINHO</a></li>
+        </ul>
+
+        <div class="nav-icons">
+
+            <a href="rastreio.html" class="icon-link" title="Rastrear Pedido">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="3" width="15" height="13"></rect>
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                </svg>
+            </a>
+
+            <div class="cart-icon-container" onclick="toggleCart()" title="Ver Carrinho">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="feather feather-shopping-bag">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span id="cart-count" class="cart-badge">0</span>
+            </div>
+
+        </div>
+    </nav>
+
+    <header class="hero">
+        <img src="../arquivos/imagens/logofinal.svg" alt="Fatal Company Main Logo" class="hero-logo"
+            onerror="this.style.display='none'">
+        <button class="btn" onclick="document.getElementById('shop').scrollIntoView({behavior: 'smooth'})">Ver
+            Coleção</button>
+    </header>
+
+    <div class="marquee">
+        <div class="marquee-content">
+            NOVA COLEÇÃO DISPONÍVEL — FATAL COMPANY — ENVIO PARA TODO BRASIL — ESTILO SEM LIMITES — CUPOM: FATAL5 — NOVA
+            COLEÇÃO
+        </div>
+    </div>
+
+    <section class="products" id="shop">
+        <div class="section-header reveal">
+            <h2>LATEST DROP</h2>
+            <span>2026 COLLECTION</span>
+        </div>
+
+        <div id="category-filters" class="category-menu">
+            <button class="category-btn active" onclick="filterProducts('all')">Todos</button>
+            <button class="category-btn" onclick="filterProducts('camisetas')">Camisetas</button>
+            <button class="category-btn" onclick="filterProducts('calcas')">Calças</button>
+            <button class="category-btn" onclick="filterProducts('acessorios')">Acessórios</button>
+        </div>
+
+        <div class="grid" id="product-grid"></div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+
+            <div class="footer-col">
+                <img src="../arquivos/imagens/logofinal.svg" alt="Fatal Company" class="footer-logo"
+                    onerror="this.style.display='none'">
+                <p class="footer-desc">
+                    Estilo sem limites para quem não tem medo de ousar.
+                    A Fatal Company define o streetwear com exclusividade e atitude.
+                </p>
+                <div class="social-links">
+                    <a href="#" aria-label="Instagram">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+
+            <div class="footer-col">
+                <h4>SUPORTE</h4>
+                <ul>
+                    <li><a href="politica/ajuda.html">Central de Ajuda</a></li>
+                    <li><a href="politica/trocas.html">Trocas e Devoluções</a></li>
+                    <li><a href="politica/termos.html">Termos de Uso</a></li>
+                    <li><a href="politica/privacidade.html">Política de Privacidade</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>PAGAMENTO SEGURO</h4>
+                <div class="payment-icons">
+                    <span class="pay-icon">PIX</span>
+                    <span class="pay-icon">VISA</span>
+                    <span class="pay-icon">MASTER</span>
+                    <span class="pay-icon">ELO</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2025 FATAL COMPANY. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <div id="checkout-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeCheckout()">&times;</span>
+            <h2 class="checkout-title">Finalizar Pedido</h2>
+
+            <form id="checkout-form">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="chk-nome" placeholder="Digite seu nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="chk-email" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>CPF (Para Nota e PIX)</label>
+                    <input type="text" id="chk-cpf" placeholder="000.000.000-00" maxlength="14" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CEP</label>
+                        <input type="text" id="chk-cep" onblur="calcularFrete(this.value)" placeholder="00000-000"
+                            maxlength="9" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Custo Frete</label>
+                        <input type="text" id="chk-frete-display" value="..." disabled>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Endereço de Entrega</label>
+                    <input type="text" id="chk-endereco" placeholder="Rua, Número, Bairro" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Cupom de Desconto</label>
+                    <div class="cupom-container">
+                        <input type="text" id="chk-cupom" placeholder="Código">
+                        <button type="button" class="btn-cupom" onclick="aplicarCupom()">Aplicar</button>
+                    </div>
+                    <small id="cupom-msg" style="display:block; margin-top:5px; font-size:0.8rem;"></small>
+                </div>
+
+                <div class="checkout-summary">
+                    <p>Subtotal: <span id="summary-subtotal">R$ 0.00</span></p>
+                    <p>Frete: <span id="summary-frete">R$ 0.00</span></p>
+                    <p>Desconto: <span id="summary-desconto" style="color:#0f0">- R$ 0.00</span></p>
+                    <div class="total-line">
+                        <p style="margin:0; color:white;">TOTAL: <span id="summary-total">R$ 0.00</span></p>
+                    </div>
+
+                    <p
+                        style="font-size: 0.8rem; color: #888; margin-top: 15px; text-align: center; border-top: 1px solid #333; padding-top: 10px;">
+                        <span style="color: #009ee3;">●</span> Pagamento seguro via Mercado Pago
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-finalizar">IR PARA O PAGAMENTO</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="cart-overlay" class="cart-overlay" onclick="toggleCart()"></div>
+
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>SUA SACOLA</h3>
+            <button class="close-cart-btn" onclick="toggleCart()">&times;</button>
+        </div>
+
+        <div id="cart-items-container" class="cart-body">
+        </div>
+
+        <div class="cart-footer">
+            <div class="cart-total-row">
+                <span>Total:</span>
+                <span id="cart-total-price" style="color: #0f0; font-size: 1.2rem;">R$ 0,00</span>
+            </div>
+            <button class="checkout-btn" onclick="openCheckout(); toggleCart();">FINALIZAR COMPRA</button>
+            <button class="continue-btn" onclick="toggleCart()">CONTINUAR COMPRANDO</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <script>
+        // --- FUNÇÃO PARA ABRIR/FECHAR O CARRINHO ---
+        // Adicionada aqui para garantir que funcione com o novo HTML
+        function toggleCart() {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // --- VERIFICAÇÃO DE SEGURANÇA ---
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('isAdmin');
+            window.location.href = 'login.html';
+        }
+
+        // Menu Mobile
+        const burger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+
+        if (burger) {
+            burger.addEventListener('click', () => {
+                navLinks.classList.toggle('nav-active');
+                burger.classList.toggle('toggle');
+            });
+        }
+    </script>
+</body>
+
+</html>

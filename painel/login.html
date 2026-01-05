@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fatal Company</title>
+    <link rel="shortcut icon" href="../arquivos/imagens/logofinal.svg" type="image/x-icon">
+
+    <style>
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-box {
+            background: #111;
+            padding: 40px;
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #000;
+            border: 1px solid #333;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: black;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: #ccc;
+        }
+
+        a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-box">
+        <h2>Acessar Conta</h2>
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Seu Email" required>
+            <input type="password" id="password" placeholder="Sua Senha" required>
+            <button type="submit">Entrar</button>
+        </form>
+        <a href="index.html">Voltar para a Loja</a>
+    </div>
+    <script src="auth.js"></script>
+</body>
+
+</html>

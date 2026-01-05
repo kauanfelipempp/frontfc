@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastrear Pedido | FATAL COMPANY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="../arquivos/imagens/logofinal.svg" type="image/x-icon">
+    <style>
+        body {
+            padding-top: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .tracking-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        /* Input de Busca */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 15px;
+            background: #111;
+            border: 1px solid #333;
+            color: white;
+            font-family: sans-serif;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .search-box button {
+            padding: 15px 30px;
+            background: white;
+            color: black;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .search-box button:hover {
+            background: #ccc;
+        }
+
+        /* Resultado */
+        #result-area {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .order-info {
+            background: #111;
+            padding: 25px;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        /* Barra de Progresso do Status */
+        .status-track {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .status-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #333;
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+
+        .step {
+            position: relative;
+            z-index: 1;
+            background: #111;
+            padding: 0 10px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .step-dot {
+            width: 15px;
+            height: 15px;
+            background: #333;
+            border-radius: 50%;
+            margin: 0 auto 5px auto;
+            transition: 0.3s;
+        }
+
+        /* Classe ativa para o status */
+        .step.active .step-dot {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .step.active {
+            color: white;
+        }
+
+        .correios-box {
+            background: #1a1a1a;
+            padding: 15px;
+            border-left: 4px solid #00bfff;
+            margin-top: 20px;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo-container">
+            <a href="index.html"><img src="../arquivos/imagens/logofinal.svg" alt="Logo" class="brand-logo"
+                    width="40"></a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">LOJA</a></li>
+        </ul>
+    </nav>
+
+    <div class="tracking-container">
+        <h1>RASTREAR PEDIDO</h1>
+
+        <div class="search-box">
+            <input type="text" id="order-id-input" placeholder="Cole o ID do pedido (ex: 64f8a...)" required>
+            <button onclick="buscarPedido()">BUSCAR</button>
+        </div>
+
+        <div id="loading" style="display:none; text-align:center; color:#888;">Buscando informações...</div>
+
+        <div id="result-area">
+            <div class="order-info">
+                <h2 id="display-id" style="border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
+                    PEDIDO #...</h2>
+
+                <div class="status-track">
+                    <div class="step" id="st-pendente">
+                        <div class="step-dot"></div>
+                        PENDENTE
+                    </div>
+                    <div class="step" id="st-pago">
+                        <div class="step-dot"></div>
+                        PAGO
+                    </div>
+                    <div class="step" id="st-preparando">
+                        <div class="step-dot"></div>
+                        PREPARANDO
+                    </div>
+                    <div class="step" id="st-enviado">
+                        <div class="step-dot"></div>
+                        ENVIADO
+                    </div>
+                </div>
+
+                <div id="tracking-code-box" class="correios-box">
+                    <p style="color:#ccc; font-size:0.9rem;">CÓDIGO DE RASTREIO:</p>
+                    <strong id="track-code-text"
+                        style="color:#00bfff; font-size:1.4rem; letter-spacing:1px;">AA123456789BR</strong>
+                    <br><br>
+                    <a href="#" id="correios-link" target="_blank"
+                        style="color:white; text-decoration:underline; font-size:0.9rem;">Rastrear nos Correios ↗</a>
+                </div>
+
+                <h3 style="margin-top:30px; color:#888; font-size:1rem;">RESUMO DO PEDIDO</h3>
+                <div id="items-list" style="margin-top:15px;"></div>
+
+                <div style="margin-top:20px; text-align:right; border-top:1px solid #333; padding-top:15px;">
+                    <span style="color:#888;">TOTAL:</span>
+                    <strong id="display-total" style="font-size:1.2rem; margin-left:10px;">R$ 0,00</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        async function buscarPedido() {
+            // CORREÇÃO: Pega o valor e remove a tralha (#) se existir
+            const rawInput = document.getElementById('order-id-input').value.trim();
+            const idInput = rawInput.replace('#', '');
+
+            const resultArea = document.getElementById('result-area');
+            const loading = document.getElementById('loading');
+
+            if (!idInput) return alert("Digite o código do pedido!");
+
+            // Reset visual
+            resultArea.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_URL}/tracking/${idInput}`);
+                const data = await res.json();
+
+                loading.style.display = 'none';
+
+                if (res.ok) {
+                    renderResult(data);
+                } else {
+                    alert(data.error || "Pedido não encontrado");
+                }
+            } catch (e) {
+                loading.style.display = 'none';
+                console.error(e);
+                alert("Erro de conexão. Tente novamente.");
+            }
+        }
+
+        function renderResult(order) {
+            document.getElementById('display-id').textContent = `PEDIDO #${order.id.slice(-6).toUpperCase()}`;
+            document.getElementById('display-total').textContent = `R$ ${order.total.toFixed(2)}`;
+
+            // Renderizar itens
+            const list = document.getElementById('items-list');
+            list.innerHTML = order.itens.map(i => `
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; color:#ccc; font-size:0.9rem;">
+                    <span>${i.qty}x ${i.nome} (${i.size || 'U'})</span>
+                    <span>R$ ${(i.preco * i.qty).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            // Atualizar Barra de Status
+            updateStatusBar(order.status);
+
+            // Mostrar código de rastreio se houver
+            const trackBox = document.getElementById('tracking-code-box');
+            if (order.trackingCode) {
+                trackBox.style.display = 'block';
+                document.getElementById('track-code-text').textContent = order.trackingCode;
+                document.getElementById('correios-link').href = `https://rastreamento.correios.com.br/app/index.php?objeto=${order.trackingCode}`;
+            } else {
+                trackBox.style.display = 'none';
+            }
+
+            document.getElementById('result-area').style.display = 'block';
+        }
+
+        function updateStatusBar(status) {
+            // Resetar
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+
+            const map = {
+                'Aguardando Pagamento (MP)': [],
+                'Pendente': ['st-pendente'],
+                'Pago': ['st-pendente', 'st-pago'],
+                'Aprovado': ['st-pendente', 'st-pago'],
+                'Preparando': ['st-pendente', 'st-pago', 'st-preparando'],
+                'Enviado': ['st-pendente', 'st-pago', 'st-preparando', 'st-enviado'],
+                'Entregue': ['st-pendente', 'st-pago', 'st-preparando', 'st-enviado']
+            };
+
+            const activeSteps = map[status] || ['st-pendente'];
+            activeSteps.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('active');
+            });
+        }
+    </script>
+
+</body>
+
+</html>
