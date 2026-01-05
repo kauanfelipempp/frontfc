@@ -30,10 +30,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// --- CONEXÃO MONGODB ---
-mongoose.connect('mongodb://127.0.0.1:27017/fatalcompany', {
+// Ele vai tentar usar a variável MONGO_URI do Render, se não existir, tenta o local
+const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/fatalcompany';
+
+mongoose.connect(mongoURI, {
     serverSelectionTimeoutMS: 5000
 })
+    .then(() => console.log("✅ MongoDB Conectado"))
+    .catch(err => console.error("❌ Erro MongoDB:", err));
     .then(() => console.log("✅ MongoDB Conectado"))
     .catch(err => console.error("❌ ERRO DE CONEXÃO:", err.message));
 
