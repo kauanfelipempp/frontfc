@@ -8,21 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="../arquivos/imagens/logofinal.svg" type="image/x-icon">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Oswald', sans-serif;
-        }
+        /* ... (mantenha seus estilos base e adicione/substitua os abaixo) ... */
 
         body {
             background-color: #0a0a0a;
             color: #fff;
             display: flex;
+            flex-direction: row;
+            /* Padrão desktop */
             min-height: 100vh;
         }
 
-        /* Sidebar */
+        /* Responsividade da Sidebar */
         aside {
             width: 250px;
             background: #111;
@@ -30,216 +27,86 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-        }
-
-        aside h1 {
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #fff;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
-
-        .menu-btn {
-            background: transparent;
-            border: none;
-            color: #888;
-            text-align: left;
-            padding: 15px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            text-transform: uppercase;
             transition: 0.3s;
-            width: 100%;
-            display: block;
         }
 
-        .menu-btn:hover,
-        .menu-btn.active {
-            color: #fff;
-            background: #222;
-            border-left: 3px solid white;
-        }
-
-        /* Conteúdo */
-        main {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-        }
-
-        .tab-section {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .tab-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+        /* Ajustes para Celular (Breakpoints) */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                /* Sidebar vai para cima ou vira menu */
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            aside {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #333;
+                padding: 10px;
+                flex-direction: row;
+                overflow-x: auto;
+                /* Permite scroll horizontal no menu se houver muitos itens */
+                white-space: nowrap;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+            }
+
+            aside h1 {
+                display: none;
+                /* Esconde o título no mobile para ganhar espaço */
+            }
+
+            .menu-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+                width: auto;
+                display: inline-block;
+            }
+
+            .menu-btn.active {
+                border-left: none;
+                border-bottom: 3px solid white;
+            }
+
+            main {
+                padding: 15px;
+                /* Reduz padding lateral no mobile */
+            }
+
+            /* KPIs em coluna no mobile */
+            .kpi-container {
+                grid-template-columns: 1fr 1fr;
+                /* Duas colunas em telas médias */
+            }
+
+            /* Listas (Produtos/Pedidos) */
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .list-item div {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            /* Formulários */
+            .admin-form {
+                padding: 15px;
+            }
+
+            div[style*="display: flex; gap: 20px;"] {
+                flex-direction: column;
+                gap: 0 !important;
             }
         }
 
-        /* KPIs (Os cartões do topo) */
-        .kpi-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .kpi-card {
-            background: #111;
-            padding: 20px;
-            border: 1px solid #333;
-            border-radius: 8px;
-        }
-
-        .kpi-card h3 {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-
-        .kpi-card p {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        /* Formulários e Listas */
-        .admin-form {
-            background: #151515;
-            padding: 30px;
-            border: 1px solid #333;
-            max-width: 800px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #ccc;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            background: #222;
-            border: 1px solid #444;
-            color: white;
-            outline: none;
-        }
-
-        button.btn-save {
-            background: white;
-            color: black;
-            border: none;
-            padding: 12px 30px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        button.btn-save:hover {
-            background: #ccc;
-        }
-
-        /* Listas de Itens */
-        .list-container {
-            margin-top: 20px;
-        }
-
-        .list-item {
-            background: #111;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .list-info {
-            flex: 1;
-        }
-
-        .delete-btn {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        /* Modal de Pedido */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: #111;
-            padding: 30px;
-            width: 90%;
-            max-width: 600px;
-            border: 1px solid #333;
-            position: relative;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            cursor: pointer;
-            font-size: 1.5rem;
-        }
-
-        /* Tags de Status */
-        .tag {
-            padding: 2px 8px;
-            font-size: 0.8rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .tag-admin {
-            background: purple;
-            color: #dda0dd;
-            border: 1px solid purple;
-        }
-
-        .tag-client {
-            background: #333;
-            color: #ccc;
+        @media (max-width: 480px) {
+            .kpi-container {
+                grid-template-columns: 1fr;
+                /* Uma coluna em telas pequenas */
+            }
         }
     </style>
 </head>
