@@ -1,5 +1,5 @@
 // admin-logic.js
-var API_URL_ADMIN = 'https://serverfc.onrender.com';
+var API_URL_ADMIN = 'https://serverfc.onrender.com/api';
 
 // Variáveis de Estado
 let editingProductId = null;
