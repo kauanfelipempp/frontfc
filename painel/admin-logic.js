@@ -9,7 +9,6 @@ let currentOrderId = null; // ID do pedido aberto no modal
 
 /* --- SISTEMA DE NOTIFICAÇÕES (UI CUSTOMIZADA) --- */
 
-// 1. Cria o container no HTML se não existir
 function ensureToastContainer() {
     if (!document.getElementById('toast-container')) {
         const div = document.createElement('div');
@@ -18,10 +17,10 @@ function ensureToastContainer() {
     }
 }
 
-// 2. Função SHOW TOAST (Substitui alert simples)
 window.showToast = function (message, type = 'success') {
     ensureToastContainer();
     const container = document.getElementById('toast-container');
+    if (!container) return;
 
     const toast = document.createElement('div');
     toast.className = `custom-toast toast-${type}`;
@@ -29,18 +28,14 @@ window.showToast = function (message, type = 'success') {
 
     container.appendChild(toast);
 
-    // Remove automaticamente após 3 segundos
     setTimeout(() => {
         toast.classList.add('toast-closing');
         toast.addEventListener('animationend', () => toast.remove());
     }, 3000);
 };
 
-// 3. Função CONFIRM CUSTOMIZADO (Retorna uma Promise)
-// Uso: if (await showConfirm("Tem certeza?")) { ... }
 window.showConfirm = function (title, text) {
     return new Promise((resolve) => {
-        // Cria o HTML do modal dinamicamente
         const overlay = document.createElement('div');
         overlay.className = 'custom-modal-overlay active';
         overlay.innerHTML = `
@@ -61,7 +56,7 @@ window.showConfirm = function (title, text) {
         function close(result) {
             overlay.classList.remove('active');
             setTimeout(() => overlay.remove(), 300);
-            resolve(result); // Retorna true ou false
+            resolve(result);
         }
 
         btnOk.addEventListener('click', () => close(true));
@@ -69,7 +64,6 @@ window.showConfirm = function (title, text) {
     });
 };
 
-// 4. Função PROMPT CUSTOMIZADO (Para o código de rastreio)
 window.showPrompt = function (title, text) {
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
@@ -96,50 +90,40 @@ window.showPrompt = function (title, text) {
         function close(value) {
             overlay.classList.remove('active');
             setTimeout(() => overlay.remove(), 300);
-            resolve(value); // Retorna o texto ou null
+            resolve(value);
         }
 
         btnOk.addEventListener('click', () => close(input.value));
         btnCancel.addEventListener('click', () => close(null));
 
-        // Aceitar Enter
         input.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') close(input.value);
         });
     });
 };
 
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. SEGURANÇA ---
     const token = localStorage.getItem('token');
     const isAdmin = localStorage.getItem('isAdmin');
 
-    // Se não tem token OU não é admin, chuta para fora
     if (!token || isAdmin !== 'true') {
         alert("Acesso restrito a administradores. Faça login novamente.");
         window.location.href = '../login.html';
         return;
     }
 
-    // 2. Inicialização (Se passou na segurança)
     setupImagePreview();
     setupListeners();
     loadData();
 });
 
 function setupListeners() {
-    // Listener Produtos
     const prodForm = document.getElementById('add-product-form');
     if (prodForm) prodForm.addEventListener('submit', handleProductSubmit);
 
-    // Listener Cupons
     const couponForm = document.getElementById('add-coupon-form');
     if (couponForm) couponForm.addEventListener('submit', handleCouponSubmit);
 
-    // Listener Categorias (NOVO)
     const catForm = document.getElementById('add-category-form');
     if (catForm) {
         catForm.addEventListener('submit', async (e) => {
@@ -158,7 +142,7 @@ function setupListeners() {
                 });
 
                 catForm.reset();
-                loadCategories(); // Recarrega tudo
+                loadCategories();
                 showToast("Categoria criada com sucesso!", "success");
             } catch (err) {
                 console.error(err);
@@ -167,7 +151,6 @@ function setupListeners() {
         });
     }
 
-    // Listener Busca Pedidos
     const searchInput = document.getElementById('search-order-input');
     if (searchInput) {
         searchInput.addEventListener('keyup', window.filterOrders);
@@ -176,7 +159,7 @@ function setupListeners() {
 
 function loadData() {
     loadDashboard();
-    loadCategories(); // <--- Carrega categorias primeiro para preencher o select
+    loadCategories();
     loadProducts();
     loadOrders();
     loadUsers();
@@ -194,7 +177,6 @@ async function loadDashboard() {
 
         const orders = await res.json();
 
-        // Atualiza os números no topo da tela
         const kpiOrders = document.getElementById('kpi-orders');
         const kpiMoney = document.getElementById('kpi-money');
 
@@ -206,7 +188,7 @@ async function loadDashboard() {
     } catch (e) { console.error("Erro dashboard:", e); }
 }
 
-// --- CATEGORIAS (NOVA LÓGICA) ---
+// --- CATEGORIAS ---
 
 async function loadCategories() {
     try {
@@ -215,14 +197,14 @@ async function loadCategories() {
         if (res.ok) {
             categoriesData = await res.json();
             renderCategoryList();
-            updateProductSelect(); // <--- Atualiza o dropdown de produtos
+            updateProductSelect();
         }
     } catch (e) { console.error(e); }
 }
 
 function renderCategoryList() {
     const list = document.getElementById('category-list');
-    if (!list) return;
+    if (!list) return; // CORREÇÃO: Verifica se o elemento existe
 
     list.innerHTML = categoriesData.map((cat, index) => `
         <div class="list-item" id="cat-${cat._id}" style="display:flex; align-items:center; gap:10px; background:#1a1a1a;">
@@ -240,7 +222,6 @@ function renderCategoryList() {
 }
 
 window.deleteCategory = async function (id) {
-    // Confirmação Assíncrona Personalizada
     const confirmou = await showConfirm("Apagar categoria?", "Produtos nesta categoria ficarão 'sem categoria'.");
     if (!confirmou) return;
 
@@ -251,19 +232,14 @@ window.deleteCategory = async function (id) {
     showToast("Categoria removida!", "success");
 };
 
-// Reordenação Visual
 window.moveCategory = function (index, direction) {
     if (index + direction < 0 || index + direction >= categoriesData.length) return;
-
-    // Swap
     const temp = categoriesData[index];
     categoriesData[index] = categoriesData[index + direction];
     categoriesData[index + direction] = temp;
-
     renderCategoryList();
 };
 
-// Salvar Ordem no Backend
 window.saveCategoryOrder = async function () {
     const token = localStorage.getItem('token');
     const orderedIds = categoriesData.map(c => c._id);
@@ -278,7 +254,6 @@ window.saveCategoryOrder = async function () {
     else showToast("Erro ao salvar ordem.", "error");
 };
 
-// Atualiza o Select de Produtos
 function updateProductSelect() {
     const select = document.getElementById('prod-cat');
     if (!select) return;
@@ -296,8 +271,40 @@ function updateProductSelect() {
     if (currentValue) select.value = currentValue;
 }
 
+// --- PRODUTOS ---
 
-// --- PRODUTOS (CRIAR E EDITAR) ---
+async function loadProducts() {
+    try {
+        const res = await fetch(`${API_URL_ADMIN}/products`);
+        const products = await res.json();
+        const list = document.getElementById('admin-product-list');
+
+        if (list) { // CORREÇÃO: Verifica se o elemento existe
+            list.innerHTML = products.map(p => {
+                const pString = encodeURIComponent(JSON.stringify(p));
+                return `
+                <div class="list-item">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${p.imagem}" style="width:40px; height:40px; object-fit:cover;">
+                        <div class="list-info">
+                            <strong>${p.nome}</strong>
+                            <small>R$ ${Number(p.preco).toFixed(2)}</small>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="edit-btn" onclick="startEdit('${pString}')" style="margin-right:5px; cursor:pointer;">✏️</button>
+                        <button class="delete-btn" onclick="deleteProduct('${p._id}')">X</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        const kpiProd = document.getElementById('kpi-products');
+        if (kpiProd) kpiProd.textContent = products.length;
+
+    } catch (e) { console.error(e); }
+}
+
 async function handleProductSubmit(e) {
     e.preventDefault();
     const token = localStorage.getItem('token');
@@ -358,10 +365,8 @@ window.startEdit = function (productStr) {
     document.getElementById('prod-nome').value = p.nome;
     document.getElementById('prod-preco').value = p.preco;
 
-    // Garante que o select tenha as opções antes de setar o valor
     updateProductSelect();
     document.getElementById('prod-cat').value = p.categoria || "";
-
     document.getElementById('prod-imagem-hidden').value = p.imagem;
     document.getElementById('colors').value = p.colors ? p.colors.join(', ') : "";
 
@@ -370,57 +375,36 @@ window.startEdit = function (productStr) {
     });
 
     const btn = document.querySelector('#add-product-form button');
-    btn.textContent = "SALVAR ALTERAÇÕES";
-    btn.style.background = "#ff9900";
+    if (btn) {
+        btn.textContent = "SALVAR ALTERAÇÕES";
+        btn.style.background = "#ff9900";
+    }
 
     const preview = document.getElementById('preview-img');
-    preview.src = p.imagem;
-    preview.style.display = 'block';
+    if (preview) {
+        preview.src = p.imagem;
+        preview.style.display = 'block';
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 function cancelEdit() {
     editingProductId = null;
-    document.getElementById('add-product-form').reset();
-    document.getElementById('preview-img').style.display = 'none';
+    const form = document.getElementById('add-product-form');
+    if (form) form.reset();
+
+    const preview = document.getElementById('preview-img');
+    if (preview) preview.style.display = 'none';
+
     const btn = document.querySelector('#add-product-form button');
-    btn.textContent = "CADASTRAR PRODUTO";
-    btn.style.background = "white";
-}
-
-async function loadProducts() {
-    try {
-        const res = await fetch(`${API_URL_ADMIN}/products`);
-        const products = await res.json();
-        const list = document.getElementById('admin-product-list');
-
-        list.innerHTML = products.map(p => {
-            const pString = encodeURIComponent(JSON.stringify(p));
-            return `
-            <div class="list-item">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="${p.imagem}" style="width:40px; height:40px; object-fit:cover;">
-                    <div class="list-info">
-                        <strong>${p.nome}</strong>
-                        <small>R$ ${Number(p.preco).toFixed(2)}</small>
-                    </div>
-                </div>
-                <div>
-                    <button class="edit-btn" onclick="startEdit('${pString}')" style="margin-right:5px; cursor:pointer;">✏️</button>
-                    <button class="delete-btn" onclick="deleteProduct('${p._id}')">X</button>
-                </div>
-            </div>`;
-        }).join('');
-
-        const kpiProd = document.getElementById('kpi-products');
-        if (kpiProd) kpiProd.textContent = products.length;
-
-    } catch (e) { console.error(e); }
+    if (btn) {
+        btn.textContent = "CADASTRAR PRODUTO";
+        btn.style.background = "white";
+    }
 }
 
 window.deleteProduct = async function (id) {
-    // Confirmação Assíncrona Personalizada
     const confirmou = await showConfirm("Excluir Produto?", "Essa ação não pode ser desfeita.");
     if (!confirmou) return;
 
@@ -454,6 +438,7 @@ async function loadOrders() {
 
 function renderOrderList(lista) {
     const listEl = document.getElementById('order-list');
+    if (!listEl) return; // CORREÇÃO: Verifica se o elemento existe
 
     if (lista.length === 0) {
         listEl.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">Nenhum pedido encontrado.</p>';
@@ -502,48 +487,52 @@ window.openOrderModal = function (index) {
 
     document.getElementById('modal-order-id').textContent = `PEDIDO #${order._id.slice(-6).toUpperCase()}`;
     document.getElementById('modal-status-select').value = order.status || 'Pendente';
-
     document.getElementById('modal-client-name').textContent = order.cliente.nome;
     document.getElementById('modal-client-email').textContent = order.cliente.email;
     document.getElementById('modal-client-address').textContent = order.cliente.endereco;
-
     document.getElementById('modal-date').textContent = new Date(order.data).toLocaleString();
     document.getElementById('modal-total').textContent = `R$ ${order.total.toFixed(2)}`;
 
     const itemsContainer = document.getElementById('modal-items-list');
     const listaItens = order.itens || order.items || [];
 
-    itemsContainer.innerHTML = listaItens.map(i => `
-        <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:10px 0;">
-            <div style="display:flex; gap:10px; align-items:center;">
-                <div style="background:#222; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; color: white;">
-                    ${i.qty}x
+    if (itemsContainer) {
+        itemsContainer.innerHTML = listaItens.map(i => `
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:10px 0;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="background:#222; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; color: white;">
+                        ${i.qty}x
+                    </div>
+                    <div>
+                        <div style="color:white; font-weight:bold;">${i.nome}</div>
+                        <div style="color:#888; font-size:0.8rem;">Tam: ${i.size || 'U'} | Cor: ${i.color || 'N/A'}</div>
+                    </div>
                 </div>
-                <div>
-                    <div style="color:white; font-weight:bold;">${i.nome}</div>
-                    <div style="color:#888; font-size:0.8rem;">Tam: ${i.size || 'U'} | Cor: ${i.color || 'N/A'}</div>
-                </div>
+                <div style="font-weight:bold;">R$ ${(i.preco * i.qty).toFixed(2)}</div>
             </div>
-            <div style="font-weight:bold;">R$ ${(i.preco * i.qty).toFixed(2)}</div>
-        </div>
-    `).join('');
+        `).join('');
+    }
 
-    document.getElementById('order-modal').style.display = 'flex';
+    const modal = document.getElementById('order-modal');
+    if (modal) modal.style.display = 'flex';
 };
 
 window.closeOrderModal = function () {
-    document.getElementById('order-modal').style.display = 'none';
+    const modal = document.getElementById('order-modal');
+    if (modal) modal.style.display = 'none';
 };
 
 window.updateOrderStatus = async function () {
-    const newStatus = document.getElementById('modal-status-select').value;
+    const statusSelect = document.getElementById('modal-status-select');
+    if (!statusSelect) return;
+
+    const newStatus = statusSelect.value;
     const token = localStorage.getItem('token');
     let trackingCode = "";
 
     if (newStatus === 'Enviado') {
-        // Prompt Personalizado Assíncrono
         trackingCode = await showPrompt("Rastreio", "Digite o código dos Correios (ou deixe vazio):");
-        if (trackingCode === null) return; // Usuário cancelou
+        if (trackingCode === null) return;
     }
 
     const bodyData = { status: newStatus };
@@ -552,19 +541,15 @@ window.updateOrderStatus = async function () {
     try {
         const res = await fetch(`${API_URL_ADMIN}/orders/${currentOrderId}/status`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
             body: JSON.stringify(bodyData)
         });
 
         if (res.ok) {
             showToast("Status atualizado com sucesso!", "success");
             loadOrders();
-            const select = document.getElementById('modal-status-select');
-            select.style.borderColor = '#00ff00';
-            setTimeout(() => select.style.borderColor = '#333', 1000);
+            statusSelect.style.borderColor = '#00ff00';
+            setTimeout(() => statusSelect.style.borderColor = '#333', 1000);
         } else {
             showToast("Erro ao atualizar status", "error");
         }
@@ -572,12 +557,16 @@ window.updateOrderStatus = async function () {
 };
 
 // --- USUÁRIOS E CUPONS ---
+
 async function loadUsers() {
     try {
         const token = localStorage.getItem('token');
         const res = await fetch(`${API_URL_ADMIN}/users`, { headers: { 'Authorization': token } });
         const users = await res.json();
+
         const list = document.getElementById('user-list');
+        if (!list) return; // CORREÇÃO: Verifica se o elemento existe
+
         list.innerHTML = users.map(u =>
             `<div class="list-item">
                 <div class="list-info"><strong>${u.nome}</strong><small>${u.email}</small></div>
@@ -611,7 +600,9 @@ async function loadCoupons() {
         const token = localStorage.getItem('token');
         const res = await fetch(`${API_URL_ADMIN}/coupons`, { headers: { 'Authorization': token } });
         const coupons = await res.json();
+
         const list = document.getElementById('coupon-list');
+        if (!list) return; // CORREÇÃO: Verifica se o elemento existe
 
         list.innerHTML = coupons.map(c => {
             const freeShippingBadge = c.freeShipping
@@ -653,7 +644,10 @@ function setupImagePreview() {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = e => { previewImg.src = e.target.result; previewImg.style.display = 'block'; };
+                reader.onload = e => {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                };
                 reader.readAsDataURL(file);
             }
         });

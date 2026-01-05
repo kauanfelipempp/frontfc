@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAGAMENTO NÃO CONCLUÍDO — FATAL COMPANY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .status-container {
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .status-icon {
+            color: #ff4444;
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .status-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .status-text {
+            color: #888;
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav style="background: #000; position: relative;">
+        <div class="logo-container"><a href="index.html"><img src="../arquivos/imagens/logofinal.svg" alt="Logo"
+                    class="brand-logo"></a></div>
+    </nav>
+
+    <div class="status-container">
+        <div class="status-icon">✕</div>
+        <h1 class="status-title">PAGAMENTO CANCELADO</h1>
+        <p class="status-text">Houve um problema ao processar seu pagamento ou a transação foi cancelada. Tente
+            novamente ou utilize outro método.</p>
+        <a href="index.html" class="btn">Tentar Novamente</a>
+    </div>
+</body>
+
+</html>
