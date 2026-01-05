@@ -1,3 +1,4 @@
+// script.js
 // ================== CONFIG ==================
 const LOJA_API_URL = 'https://serverfc.onrender.com/api';
 

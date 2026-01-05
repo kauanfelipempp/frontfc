@@ -13,6 +13,7 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+
 // Servir a pasta uploads publicamente
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -45,15 +46,31 @@ const User = mongoose.model('User', new mongoose.Schema({
 }));
 
 const Product = mongoose.model('Product', new mongoose.Schema({
-    name: String, price: Number, image: String, description: String, sizes: [String], colors: [String]
+    name: String,
+    price: Number,
+    image: String,
+    description: String,
+    sizes: [String],
+    colors: [String]
+}));
+
+const Category = mongoose.model('Category', new mongoose.Schema({
+    title: { type: String, required: true },
+    description: String,
+    order: { type: Number, default: 0 }
 }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
-    cliente: Object, itens: Array, total: Number, data: { type: Date, default: Date.now }
+    cliente: Object,
+    itens: Array,
+    total: Number,
+    data: { type: Date, default: Date.now }
 }));
 
 const Coupon = mongoose.model('Coupon', new mongoose.Schema({
-    code: { type: String, uppercase: true, unique: true }, discount: Number, freeShipping: Boolean
+    code: { type: String, uppercase: true, unique: true },
+    discount: Number,
+    freeShipping: Boolean
 }));
 
 // --- MIDDLEWARES ---
@@ -73,7 +90,7 @@ function verifyAdmin(req, res, next) {
 
 // --- ROTAS DE PRODUTOS ---
 
-// Listar todos
+// Listar todos (Corrigido para HTTPS do Render)
 app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find();
@@ -81,7 +98,8 @@ app.get('/api/products', async (req, res) => {
             _id: p._id,
             nome: p.name,
             preco: p.price,
-            imagem: p.image?.startsWith('http') ? p.image : `http://localhost:3000/${p.image}`,
+            // CORREÇÃO: Usando a URL do Render em vez de localhost
+            imagem: p.image?.startsWith('http') ? p.image : `https://serverfc.onrender.com/${p.image}`,
             categoria: p.description,
             sizes: p.sizes,
             colors: p.colors
@@ -90,7 +108,6 @@ app.get('/api/products', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Erro ao buscar produtos" }); }
 });
 
-// Criar produto
 app.post('/api/products', verifyAdmin, async (req, res) => {
     try {
         const p = new Product({
@@ -106,7 +123,6 @@ app.post('/api/products', verifyAdmin, async (req, res) => {
     } catch (e) { res.status(400).json({ error: "Erro ao criar produto" }); }
 });
 
-// Atualizar produto (PUT) - NECESSÁRIO PARA O ADMIN-SCRIPT
 app.put('/api/products/:id', verifyAdmin, async (req, res) => {
     try {
         const updated = await Product.findByIdAndUpdate(req.params.id, {
@@ -121,12 +137,45 @@ app.put('/api/products/:id', verifyAdmin, async (req, res) => {
     } catch (e) { res.status(400).json({ error: "Erro ao atualizar produto" }); }
 });
 
-// Excluir produto (DELETE) - NECESSÁRIO PARA O ADMIN-SCRIPT
 app.delete('/api/products/:id', verifyAdmin, async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
         res.json({ message: "Removido com sucesso" });
     } catch (e) { res.status(400).json({ error: "Erro ao excluir" }); }
+});
+
+// --- ROTAS DE CATEGORIAS (Novas) ---
+
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await Category.find().sort({ order: 1 });
+        res.json(categories);
+    } catch (e) { res.status(500).json({ error: "Erro ao buscar categorias" }); }
+});
+
+app.post('/api/categories', verifyAdmin, async (req, res) => {
+    try {
+        const cat = new Category(req.body);
+        await cat.save();
+        res.json(cat);
+    } catch (e) { res.status(400).json({ error: "Erro ao criar categoria" }); }
+});
+
+app.put('/api/categories/reorder', verifyAdmin, async (req, res) => {
+    try {
+        const { orderedIds } = req.body;
+        for (let i = 0; i < orderedIds.length; i++) {
+            await Category.findByIdAndUpdate(orderedIds[i], { order: i });
+        }
+        res.json({ success: true });
+    } catch (e) { res.status(400).json({ error: "Erro ao reordenar" }); }
+});
+
+app.delete('/api/categories/:id', verifyAdmin, async (req, res) => {
+    try {
+        await Category.findByIdAndDelete(req.params.id);
+        res.json({ message: "Categoria removida" });
+    } catch (e) { res.status(400).json({ error: "Erro ao deletar categoria" }); }
 });
 
 // --- ROTA DE UPLOAD ---
@@ -161,7 +210,7 @@ app.get('/api/orders', verifyAdmin, async (req, res) => {
 });
 
 app.get('/api/users', verifyAdmin, async (req, res) => {
-    const users = await User.find({}, '-senha'); // Retorna todos menos a senha
+    const users = await User.find({}, '-senha');
     res.json(users);
 });
 
@@ -179,4 +228,5 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Erro interno" }); }
 });
 
-app.listen(3000, () => console.log("🚀 Servidor Fatal Company em http://localhost:3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
