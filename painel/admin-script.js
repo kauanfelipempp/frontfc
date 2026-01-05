@@ -6,38 +6,36 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const JWT_SECRET = "segredo_super_secreto_fatal_company";
+const JWT_SECRET = process.env.JWT_SECRET || "segredo_super_secreto_fatal_company";
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Servir a pasta uploads publicamente
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// --- CONFIGURAÇÃO DO CLOUDINARY ---
+// As chaves devem ser configuradas nas variáveis de ambiente do Render
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET
+});
 
-// --- CONFIGURAÇÃO DE UPLOAD ---
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, uploadDir); },
-    filename: (req, file, cb) => {
-        const uniqueName = 'prod-' + Date.now() + path.extname(file.originalname);
-        cb(null, uniqueName);
-    }
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'fatal_products',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    },
 });
 const upload = multer({ storage });
 
-// Ele vai tentar usar a variável MONGO_URI do Render, se não existir, tenta o local
+// --- CONEXÃO MONGODB ---
 const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/fatalcompany';
 
-mongoose.connect(mongoURI, {
-    serverSelectionTimeoutMS: 5000
-})
-    .then(() => console.log("✅ MongoDB Conectado"))
-    .catch(err => console.error("❌ Erro MongoDB:", err));
+mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000 })
     .then(() => console.log("✅ MongoDB Conectado"))
     .catch(err => console.error("❌ ERRO DE CONEXÃO:", err.message));
 
@@ -94,7 +92,6 @@ function verifyAdmin(req, res, next) {
 
 // --- ROTAS DE PRODUTOS ---
 
-// Listar todos (Corrigido para HTTPS do Render)
 app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find();
@@ -102,7 +99,8 @@ app.get('/api/products', async (req, res) => {
             _id: p._id,
             nome: p.name,
             preco: p.price,
-            // CORREÇÃO: Usando a URL do Render em vez de localhost
+            // Se a imagem já for um link externo (Cloudinary), usa direto. 
+            // Se for antiga (local), tenta montar o link do servidor.
             imagem: p.image?.startsWith('http') ? p.image : `https://serverfc.onrender.com/${p.image}`,
             categoria: p.description,
             sizes: p.sizes,
@@ -148,7 +146,14 @@ app.delete('/api/products/:id', verifyAdmin, async (req, res) => {
     } catch (e) { res.status(400).json({ error: "Erro ao excluir" }); }
 });
 
-// --- ROTAS DE CATEGORIAS (Novas) ---
+// --- ROTA DE UPLOAD (CLOUDINARY) ---
+app.post('/api/upload', verifyAdmin, upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "Erro ao subir imagem" });
+    // Retorna a URL segura gerada pelo Cloudinary
+    res.json({ imageUrl: req.file.path });
+});
+
+// --- ROTAS DE CATEGORIAS ---
 
 app.get('/api/categories', async (req, res) => {
     try {
@@ -180,12 +185,6 @@ app.delete('/api/categories/:id', verifyAdmin, async (req, res) => {
         await Category.findByIdAndDelete(req.params.id);
         res.json({ message: "Categoria removida" });
     } catch (e) { res.status(400).json({ error: "Erro ao deletar categoria" }); }
-});
-
-// --- ROTA DE UPLOAD ---
-app.post('/api/upload', verifyAdmin, upload.single('image'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
-    res.json({ imageUrl: `uploads/${req.file.filename}` });
 });
 
 // --- ROTAS DE CUPONS ---
