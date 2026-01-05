@@ -124,29 +124,43 @@ function setupListeners() {
     const couponForm = document.getElementById('add-coupon-form');
     if (couponForm) couponForm.addEventListener('submit', handleCouponSubmit);
 
+    // CORREÇÃO: Listener de Categorias com verificação de campos nulos
     const catForm = document.getElementById('add-category-form');
     if (catForm) {
         catForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('token');
+
+            const titleEl = document.getElementById('cat-title');
+            const descEl = document.getElementById('cat-desc');
+
             const data = {
-                title: document.getElementById('cat-title').value,
-                description: document.getElementById('cat-desc').value
+                title: titleEl ? titleEl.value : "",
+                description: descEl ? descEl.value : ""
             };
 
+            if (!data.title) {
+                showToast("O título da categoria é obrigatório.", "error");
+                return;
+            }
+
             try {
-                await fetch(`${API_URL_ADMIN}/categories`, {
+                const res = await fetch(`${API_URL_ADMIN}/categories`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': token },
                     body: JSON.stringify(data)
                 });
 
-                catForm.reset();
-                loadCategories();
-                showToast("Categoria criada com sucesso!", "success");
+                if (res.ok) {
+                    catForm.reset();
+                    loadCategories();
+                    showToast("Categoria criada com sucesso!", "success");
+                } else {
+                    showToast("Erro ao criar categoria.", "error");
+                }
             } catch (err) {
                 console.error(err);
-                showToast("Erro ao criar categoria.", "error");
+                showToast("Erro ao conectar com o servidor.", "error");
             }
         });
     }
@@ -204,7 +218,7 @@ async function loadCategories() {
 
 function renderCategoryList() {
     const list = document.getElementById('category-list');
-    if (!list) return; // CORREÇÃO: Verifica se o elemento existe
+    if (!list) return;
 
     list.innerHTML = categoriesData.map((cat, index) => `
         <div class="list-item" id="cat-${cat._id}" style="display:flex; align-items:center; gap:10px; background:#1a1a1a;">
@@ -279,7 +293,7 @@ async function loadProducts() {
         const products = await res.json();
         const list = document.getElementById('admin-product-list');
 
-        if (list) { // CORREÇÃO: Verifica se o elemento existe
+        if (list) {
             list.innerHTML = products.map(p => {
                 const pString = encodeURIComponent(JSON.stringify(p));
                 return `
@@ -438,7 +452,7 @@ async function loadOrders() {
 
 function renderOrderList(lista) {
     const listEl = document.getElementById('order-list');
-    if (!listEl) return; // CORREÇÃO: Verifica se o elemento existe
+    if (!listEl) return;
 
     if (lista.length === 0) {
         listEl.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">Nenhum pedido encontrado.</p>';
@@ -565,7 +579,7 @@ async function loadUsers() {
         const users = await res.json();
 
         const list = document.getElementById('user-list');
-        if (!list) return; // CORREÇÃO: Verifica se o elemento existe
+        if (!list) return;
 
         list.innerHTML = users.map(u =>
             `<div class="list-item">
@@ -602,7 +616,7 @@ async function loadCoupons() {
         const coupons = await res.json();
 
         const list = document.getElementById('coupon-list');
-        if (!list) return; // CORREÇÃO: Verifica se o elemento existe
+        if (!list) return;
 
         list.innerHTML = coupons.map(c => {
             const freeShippingBadge = c.freeShipping
