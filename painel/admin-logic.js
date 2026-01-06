@@ -293,13 +293,10 @@ async function loadProducts() {
         if (list) {
             list.innerHTML = products.map(p => {
                 const pString = encodeURIComponent(JSON.stringify(p));
-                // Pega a primeira imagem do array para o thumbnail
-                const thumb = (p.imagens && p.imagens.length > 0) ? p.imagens[0] : (p.imagem || '');
-
                 return `
                 <div class="list-item">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${thumb}" style="width:40px; height:40px; object-fit:cover;">
+                        <img src="${p.imagem}" style="width:40px; height:40px; object-fit:cover;">
                         <div class="list-info">
                             <strong>${p.nome}</strong>
                             <small>R$ ${Number(p.preco).toFixed(2)}</small>
@@ -330,24 +327,15 @@ async function handleProductSubmit(e) {
     const preco = document.getElementById('prod-preco').value;
     const categoria = document.getElementById('prod-cat').value;
     const colors = document.getElementById('colors').value;
-    const description = document.getElementById('prod-description').value; // Novo campo
-    const material = document.getElementById('prod-material').value;       // Novo campo
     const sizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(el => el.value);
 
     const formData = new FormData();
-
-    // CORREÇÃO: Múltiplas imagens usando a chave 'images' (conforme seu server.js)
-    if (fileInput.files.length > 0) {
-        for (let i = 0; i < fileInput.files.length; i++) {
-            formData.append('images', fileInput.files[i]);
-        }
+    if (fileInput.files[0]) {
+        formData.append('imagem', fileInput.files[0]);
     }
-
     formData.append('nome', nome);
     formData.append('preco', preco);
     formData.append('categoria', categoria);
-    formData.append('description', description);
-    formData.append('material', material);
     formData.append('colors', JSON.stringify(colors.split(',').map(c => c.trim())));
     formData.append('sizes', JSON.stringify(sizes));
 
@@ -390,10 +378,8 @@ window.startEdit = function (productStr) {
     const p = JSON.parse(decodeURIComponent(productStr));
     editingProductId = p._id;
 
-    document.getElementById('prod-nome').value = p.nome || "";
-    document.getElementById('prod-preco').value = p.preco || "";
-    document.getElementById('prod-description').value = p.description || ""; // Novo
-    document.getElementById('prod-material').value = p.material || "";       // Novo
+    document.getElementById('prod-nome').value = p.nome;
+    document.getElementById('prod-preco').value = p.preco;
 
     updateProductSelect();
     document.getElementById('prod-cat').value = p.categoria || "";
@@ -409,12 +395,10 @@ window.startEdit = function (productStr) {
         btn.style.background = "#ff9900";
     }
 
-    // Preview da primeira imagem existente
     const preview = document.getElementById('preview-img');
     if (preview) {
-        const imgSource = (p.imagens && p.imagens.length > 0) ? p.imagens[0] : (p.imagem || '');
-        preview.src = imgSource;
-        preview.style.display = imgSource ? 'block' : 'none';
+        preview.src = p.imagem;
+        preview.style.display = 'block';
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -512,6 +496,7 @@ window.filterOrders = function () {
     renderOrderList(filtered);
 };
 
+// CORREÇÃO: Função de Modal de Pedido com Segurança Máxima
 window.openOrderModal = function (index) {
     const order = ordersData[index];
     if (!order) return;
@@ -520,6 +505,7 @@ window.openOrderModal = function (index) {
     document.getElementById('modal-order-id').textContent = `PEDIDO #${order._id.slice(-6).toUpperCase()}`;
     document.getElementById('modal-status-select').value = order.status || 'Pendente';
 
+    // Verifica se cliente existe antes de acessar propriedades
     document.getElementById('modal-client-name').textContent = order.cliente?.nome || "Não informado";
     document.getElementById('modal-client-email').textContent = order.cliente?.email || "Não informado";
     document.getElementById('modal-client-address').textContent = order.cliente?.endereco || "Não informado";
@@ -675,7 +661,6 @@ function setupImagePreview() {
     const previewImg = document.getElementById('preview-img');
     if (fileInput && previewImg) {
         fileInput.addEventListener('change', function () {
-            // Se houver múltiplas, mostra apenas a primeira no preview por padrão
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();

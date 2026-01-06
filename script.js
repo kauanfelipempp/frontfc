@@ -221,9 +221,9 @@ function renderProducts(listaProdutos) {
         const card = document.createElement('div');
         card.className = 'card reveal active';
         card.innerHTML = `
-            <div class="card-image" onclick="window.location.href='produto.html?id=${p._id}'" style="cursor:pointer">
-        <img src="${imgPath}">
-    </div>
+            <div class="card-image">
+                <img src="${imgPath}" onerror="this.src='https://placehold.co/400x500?text=ERRO'">
+            </div>
             <div class="card-info">
                 <span class="product-name" style="color:white; display:block;">${nomeProduto}</span>
                 <span class="product-price" style="color:#888;">R$ ${precoNumerico.toFixed(2)}</span>
