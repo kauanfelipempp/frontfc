@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Detalhes do Produto | FATAL COMPANY</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .product-container {
+            display: flex;
+            gap: 50px;
+            padding: 50px;
+            max-width: 1200px;
+            margin: auto;
+            color: white;
+        }
+
+        .gallery-container {
+            flex: 1;
+        }
+
+        .main-img {
+            width: 100%;
+            height: 600px;
+            object-fit: cover;
+            border: 1px solid #333;
+        }
+
+        .thumb-list {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+
+        .thumb-img {
+            width: 80px;
+            height: 100px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 1px solid #333;
+        }
+
+        .info-container {
+            flex: 1;
+        }
+
+        .prod-title {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .prod-price {
+            font-size: 1.8rem;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .prod-desc {
+            color: #ccc;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+
+        .variant-box {
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #111;
+            color: white;
+            border: 1px solid #333;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body style="background: #050505;">
+    <div id="product-details" class="product-container">
+        <div class="gallery-container">
+            <img id="main-photo" src="" class="main-img">
+            <div id="thumb-list" class="thumb-list"></div>
+        </div>
+        <div class="info-container">
+            <h1 id="p-title" class="prod-title">Carregando...</h1>
+            <p id="p-price" class="prod-price">R$ 0,00</p>
+
+            <div class="variant-box">
+                <label>TAMANHO</label>
+                <select id="p-sizes"></select>
+            </div>
+
+            <div class="variant-box">
+                <label>COR</label>
+                <select id="p-colors"></select>
+            </div>
+
+            <button class="add-btn"
+                style="width:100%; padding:20px; background:white; color:black; font-weight:bold; cursor:pointer;"
+                onclick="adicionarAoCarrinhoPagina()">ADICIONAR À SACOLA</button>
+
+            <div class="prod-desc">
+                <h3>ESPECIFICAÇÕES</h3>
+                <p id="p-desc"></p>
+                <p><strong>Material:</strong> <span id="p-material"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://serverfc.onrender.com/api";
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        async function loadProduct() {
+            if (!productId) return window.location.href = 'index.html';
+
+            try {
+                const res = await fetch(`${API_URL}/products/${productId}`);
+                const p = await res.json();
+
+                document.getElementById('p-title').textContent = p.name;
+                document.getElementById('p-price').textContent = `R$ ${p.price.toFixed(2)}`;
+                document.getElementById('p-desc').textContent = p.description || "Sem descrição disponível.";
+                document.getElementById('p-material').textContent = p.material || "Não informado.";
+                document.getElementById('main-photo').src = p.image;
+
+                // Renderizar Galeria
+                const thumbs = document.getElementById('thumb-list');
+                const galeria = p.images && p.images.length > 0 ? p.images : [p.image];
+                thumbs.innerHTML = galeria.map(img => `
+                    <img src="${img}" class="thumb-img" onclick="document.getElementById('main-photo').src='${img}'">
+                `).join('');
+
+                // Preencher Selects
+                document.getElementById('p-sizes').innerHTML = p.sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+                document.getElementById('p-colors').innerHTML = p.colors.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        loadProduct();
+    </script>
+</body>
+
+</html>

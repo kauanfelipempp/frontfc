@@ -90,7 +90,7 @@
             }
         }
 
-        /* KPIs (Os cartões do topo) */
+        /* KPIs */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -146,6 +146,11 @@
             outline: none;
         }
 
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
         button.btn-save {
             background: white;
             color: black;
@@ -177,20 +182,29 @@
             align-items: center;
         }
 
-        .list-info {
-            flex: 1;
+        /* Preview de imagens */
+        #preview-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
         }
 
-        .delete-btn {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-left: 10px;
+        .preview-img-wrapper {
+            width: 80px;
+            height: 80px;
+            border: 1px solid #333;
+            overflow: hidden;
+            background: #222;
         }
 
-        /* Modal de Pedido Corrigido */
+        .preview-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -221,25 +235,6 @@
             right: 20px;
             cursor: pointer;
             font-size: 1.5rem;
-        }
-
-        /* Tags de Status */
-        .tag {
-            padding: 2px 8px;
-            font-size: 0.8rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .tag-admin {
-            background: purple;
-            color: #dda0dd;
-            border: 1px solid purple;
-        }
-
-        .tag-client {
-            background: #333;
-            color: #ccc;
         }
     </style>
 </head>
@@ -295,6 +290,11 @@
                     <input type="text" id="prod-nome" required>
                 </div>
 
+                <div class="form-group">
+                    <label>Descrição Detalhada</label>
+                    <textarea id="prod-description" placeholder="Conte mais sobre o produto..."></textarea>
+                </div>
+
                 <div style="display: flex; gap: 20px;">
                     <div class="form-group" style="flex: 1;">
                         <label>Preço (R$)</label>
@@ -308,41 +308,48 @@
                     </div>
                 </div>
 
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Material</label>
+                        <input type="text" id="prod-material" placeholder="Ex: Algodão Penteado">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Cores (Separadas por vírgula)</label>
+                        <input type="text" id="colors" placeholder="Ex: Preto, Branco">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Imagem do Produto</label>
-                    <input type="file" id="prod-file" accept="image/*">
-                    <img id="preview-img"
-                        style="width: 100px; margin-top: 10px; display: none; border: 1px solid #333;">
+                    <label>Fotos do Produto (Selecione várias):</label>
+                    <input type="file" id="prod-file" multiple accept="image/*">
+                    <div id="preview-container"></div>
                 </div>
 
                 <div class="form-group">
                     <label>Tamanhos Disponíveis</label>
                     <div style="display: flex; gap: 15px; margin-top: 10px;">
-                        <label><input type="checkbox" name="size" value="P"> P</label>
-                        <label><input type="checkbox" name="size" value="M"> M</label>
-                        <label><input type="checkbox" name="size" value="G"> G</label>
-                        <label><input type="checkbox" name="size" value="GG"> GG</label>
+                        <label style="display: flex; align-items: center; gap: 5px;"><input type="checkbox" name="size"
+                                value="P" style="width: auto;"> P</label>
+                        <label style="display: flex; align-items: center; gap: 5px;"><input type="checkbox" name="size"
+                                value="M" style="width: auto;"> M</label>
+                        <label style="display: flex; align-items: center; gap: 5px;"><input type="checkbox" name="size"
+                                value="G" style="width: auto;"> G</label>
+                        <label style="display: flex; align-items: center; gap: 5px;"><input type="checkbox" name="size"
+                                value="GG" style="width: auto;"> GG</label>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Cores (Separadas por vírgula)</label>
-                    <input type="text" id="colors" placeholder="Ex: Preto, Branco, Vermelho">
-                </div>
-
-                <button type="submit" class="btn-save">Cadastrar Produto</button>
+                <button type="submit" class="btn-save">Salvar Produto</button>
                 <button type="button" onclick="cancelEdit()"
                     style="width:100%; padding:10px; background:transparent; border:1px solid #333; color:#888; margin-top:10px; cursor:pointer;">Cancelar
                     / Limpar</button>
             </form>
 
-            <div id="admin-product-list" class="list-container">
-            </div>
+            <div id="admin-product-list" class="list-container"></div>
         </div>
 
         <div id="categorias" class="tab-section">
             <h2>Gerenciar Categorias</h2>
-
             <form id="add-category-form" class="admin-form">
                 <div class="form-group">
                     <label>Título da Categoria</label>
@@ -350,18 +357,14 @@
                 </div>
                 <div class="form-group">
                     <label>Descrição (opcional)</label>
-                    <textarea id="cat-desc" rows="3"
-                        style="width:100%; background:#222; border:1px solid #444; color:white;"
-                        placeholder="Descrição para SEO ou exibição no site"></textarea>
+                    <textarea id="cat-desc" placeholder="Descrição para SEO ou exibição no site"></textarea>
                 </div>
                 <button type="submit" class="btn-save">Salvar Categoria</button>
             </form>
 
             <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px;">
-                <h3 style="color:#888; margin-bottom:15px; font-size:0.9rem;">ORDEM DE EXIBIÇÃO (Arraste ou use as
-                    setas)</h3>
-                <div id="category-list" class="list-container">
-                </div>
+                <h3 style="color:#888; margin-bottom:15px; font-size:0.9rem;">ORDEM DE EXIBIÇÃO</h3>
+                <div id="category-list" class="list-container"></div>
                 <button onclick="saveCategoryOrder()"
                     style="margin-top:15px; background:#00bfff; border:none; padding:10px 20px; font-weight:bold; cursor:pointer;">SALVAR
                     NOVA ORDEM</button>
@@ -374,7 +377,6 @@
                 <input type="text" id="search-order-input" placeholder="🔍 Buscar ID ou Cliente..."
                     style="width: 300px;">
             </div>
-
             <div id="order-list" class="list-container">
                 <p>Carregando pedidos...</p>
             </div>
@@ -392,9 +394,7 @@
                     <input type="number" id="coupon-discount" placeholder="10" required>
                 </div>
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="coupon-free-shipping" style="width: auto;"> Frete Grátis?
-                    </label>
+                    <label><input type="checkbox" id="coupon-free-shipping" style="width: auto;"> Frete Grátis?</label>
                 </div>
                 <button type="submit" class="btn-save">Criar Cupom</button>
             </form>
@@ -411,45 +411,32 @@
         <div class="modal-content">
             <span class="close-modal" onclick="closeOrderModal()">&times;</span>
             <h2 id="modal-order-id">PEDIDO #...</h2>
-
-            <div style="border-top: 1px solid #333; margin-top: 15px; padding-top: 15px;">
-                <p><strong>Status Atual:</strong> <span id="modal-status-display">Pendente</span></p>
-                <p><strong>Data:</strong> <span id="modal-date">--/--/----</span></p>
-            </div>
-
-            <div
-                style="margin: 20px 0; padding: 15px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
-                <h3 style="color:#888; font-size:0.9rem; margin-bottom: 10px;">DADOS DO CLIENTE</h3>
-                <p><strong>Nome:</strong> <span id="modal-client-name"></span></p>
-                <p><strong>Email:</strong> <span id="modal-client-email"></span></p>
-                <p><strong>Endereço:</strong> <span id="modal-client-address"></span></p>
-            </div>
-
-            <h3 style="color:#888; font-size:0.9rem; margin-bottom:10px;">ITENS DO PEDIDO</h3>
-            <div id="modal-items-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
-
-            <div style="text-align: right; border-top: 1px solid #333; padding-top: 10px;">
-                <p style="font-size: 1.2rem;">Total: <span id="modal-total" style="color: #0f0; font-weight: bold;">R$
-                        0,00</span></p>
-            </div>
-
-            <div style="margin-top: 25px; background: #151515; padding: 15px; border: 1px solid #333;">
-                <label style="font-size: 0.8rem; color: #888;">ALTERAR STATUS DO PEDIDO:</label>
-                <select id="modal-status-select" style="margin-bottom: 10px; margin-top: 5px;">
-                    <option value="Aguardando Pagamento (MP)">Aguardando Pagamento</option>
-                    <option value="Aprovado">Aprovado</option>
-                    <option value="Preparando">Preparando</option>
-                    <option value="Enviado">Enviado</option>
-                    <option value="Entregue">Entregue</option>
-                    <option value="Cancelado">Cancelado</option>
-                </select>
-                <button onclick="updateOrderStatus()" class="btn-save">Atualizar Status</button>
-            </div>
         </div>
     </div>
 
     <script>
-        // Funções de UI (Abas)
+        // Lógica de Pré-visualização de Múltiplas Imagens
+        document.getElementById('prod-file').addEventListener('change', function () {
+            const container = document.getElementById('preview-container');
+            container.innerHTML = '';
+
+            if (this.files) {
+                Array.from(this.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'preview-img-wrapper';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        wrapper.appendChild(img);
+                        container.appendChild(wrapper);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+        // Funções de UI
         function showTab(tabId) {
             document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
@@ -468,9 +455,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('isAdmin');
+            localStorage.clear();
             window.location.href = 'login.html';
         }
     </script>
