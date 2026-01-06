@@ -20,6 +20,23 @@
             color: #fff;
             display: flex;
             min-height: 100vh;
+            flex-direction: row;
+        }
+
+        /* Botão de abrir menu (escondido no desktop) */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: white;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            z-index: 2001;
+            cursor: pointer;
+            text-transform: uppercase;
         }
 
         /* Sidebar */
@@ -30,6 +47,8 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            transition: 0.3s;
+            z-index: 1000;
         }
 
         aside h1 {
@@ -90,7 +109,7 @@
             }
         }
 
-        /* KPIs (Os cartões do topo) */
+        /* KPIs */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -116,7 +135,7 @@
             font-weight: bold;
         }
 
-        /* Formulários e Listas */
+        /* Formulários */
         .admin-form {
             background: #151515;
             padding: 30px;
@@ -158,15 +177,7 @@
             margin-top: 10px;
         }
 
-        button.btn-save:hover {
-            background: #ccc;
-        }
-
-        /* Listas de Itens */
-        .list-container {
-            margin-top: 20px;
-        }
-
+        /* Listas e Modal */
         .list-item {
             background: #111;
             padding: 15px;
@@ -177,20 +188,6 @@
             align-items: center;
         }
 
-        .list-info {
-            flex: 1;
-        }
-
-        .delete-btn {
-            background: #ff4444;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        /* Modal de Pedido Corrigido */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -215,45 +212,71 @@
             overflow-y: auto;
         }
 
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            cursor: pointer;
-            font-size: 1.5rem;
-        }
+        /* MEDIA QUERIES - RESPONSIVIDADE */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
 
-        /* Tags de Status */
-        .tag {
-            padding: 2px 8px;
-            font-size: 0.8rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
+            .mobile-menu-toggle {
+                display: block;
+            }
 
-        .tag-admin {
-            background: purple;
-            color: #dda0dd;
-            border: 1px solid purple;
-        }
+            aside {
+                position: fixed;
+                left: -250px;
+                height: 100vh;
+                width: 250px;
+            }
 
-        .tag-client {
-            background: #333;
-            color: #ccc;
+            aside.active {
+                left: 0;
+            }
+
+            main {
+                padding: 80px 15px 20px 15px;
+            }
+
+            .kpi-container {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-form {
+                padding: 15px;
+            }
+
+            /* Forçar colunas em formulários de 2 campos */
+            div[style*="display: flex; gap: 20px;"] {
+                flex-direction: column;
+                gap: 0 !important;
+            }
+
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            #search-order-input {
+                width: 100% !important;
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <aside>
+    <button class="mobile-menu-toggle" onclick="toggleMenu()">MENU</button>
+
+    <aside id="sidebar">
         <h1>Admin Panel</h1>
-        <button class="menu-btn active" onclick="showTab('dashboard')">Visão Geral</button>
-        <button class="menu-btn" onclick="showTab('produtos')">Produtos</button>
-        <button class="menu-btn" onclick="showTab('categorias')">Categorias</button>
-        <button class="menu-btn" onclick="showTab('pedidos')">Pedidos</button>
-        <button class="menu-btn" onclick="showTab('cupons')">Cupons</button>
-        <button class="menu-btn" onclick="showTab('usuarios')">Usuários</button>
+        <button class="menu-btn active" onclick="showTab('dashboard'); toggleMenu()">Visão Geral</button>
+        <button class="menu-btn" onclick="showTab('produtos'); toggleMenu()">Produtos</button>
+        <button class="menu-btn" onclick="showTab('categorias'); toggleMenu()">Categorias</button>
+        <button class="menu-btn" onclick="showTab('pedidos'); toggleMenu()">Pedidos</button>
+        <button class="menu-btn" onclick="showTab('cupons'); toggleMenu()">Cupons</button>
+        <button class="menu-btn" onclick="showTab('usuarios'); toggleMenu()">Usuários</button>
 
         <div style="margin-top: auto;">
             <button class="menu-btn" onclick="logout()" style="color: #ff4444;">Sair</button>
@@ -286,15 +309,12 @@
 
         <div id="produtos" class="tab-section">
             <h2 style="margin-bottom: 20px;">Gerenciar Produtos</h2>
-
             <form id="add-product-form" class="admin-form">
                 <input type="hidden" id="prod-imagem-hidden">
-
                 <div class="form-group">
                     <label>Nome do Produto</label>
                     <input type="text" id="prod-nome" required>
                 </div>
-
                 <div style="display: flex; gap: 20px;">
                     <div class="form-group" style="flex: 1;">
                         <label>Preço (R$)</label>
@@ -307,14 +327,12 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Imagem do Produto</label>
                     <input type="file" id="prod-file" accept="image/*">
                     <img id="preview-img"
                         style="width: 100px; margin-top: 10px; display: none; border: 1px solid #333;">
                 </div>
-
                 <div class="form-group">
                     <label>Tamanhos Disponíveis</label>
                     <div style="display: flex; gap: 15px; margin-top: 10px;">
@@ -324,25 +342,19 @@
                         <label><input type="checkbox" name="size" value="GG"> GG</label>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Cores (Separadas por vírgula)</label>
                     <input type="text" id="colors" placeholder="Ex: Preto, Branco, Vermelho">
                 </div>
-
                 <button type="submit" class="btn-save">Cadastrar Produto</button>
                 <button type="button" onclick="cancelEdit()"
-                    style="width:100%; padding:10px; background:transparent; border:1px solid #333; color:#888; margin-top:10px; cursor:pointer;">Cancelar
-                    / Limpar</button>
+                    style="width:100%; padding:10px; background:transparent; border:1px solid #333; color:#888; margin-top:10px; cursor:pointer;">Cancelar</button>
             </form>
-
-            <div id="admin-product-list" class="list-container">
-            </div>
+            <div id="admin-product-list" class="list-container"></div>
         </div>
 
         <div id="categorias" class="tab-section">
             <h2>Gerenciar Categorias</h2>
-
             <form id="add-category-form" class="admin-form">
                 <div class="form-group">
                     <label>Título da Categoria</label>
@@ -350,31 +362,26 @@
                 </div>
                 <div class="form-group">
                     <label>Descrição (opcional)</label>
-                    <textarea id="cat-desc" rows="3"
-                        style="width:100%; background:#222; border:1px solid #444; color:white;"
-                        placeholder="Descrição para SEO ou exibição no site"></textarea>
+                    <textarea id="cat-desc" rows="3" placeholder="Descrição para SEO"></textarea>
                 </div>
                 <button type="submit" class="btn-save">Salvar Categoria</button>
             </form>
-
-            <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px;">
-                <h3 style="color:#888; margin-bottom:15px; font-size:0.9rem;">ORDEM DE EXIBIÇÃO (Arraste ou use as
-                    setas)</h3>
-                <div id="category-list" class="list-container">
-                </div>
+            <div style="background:#111; padding:15px; border:1px solid #333;">
+                <h3 style="color:#888; margin-bottom:15px; font-size:0.9rem;">ORDEM DE EXIBIÇÃO</h3>
+                <div id="category-list" class="list-container"></div>
                 <button onclick="saveCategoryOrder()"
                     style="margin-top:15px; background:#00bfff; border:none; padding:10px 20px; font-weight:bold; cursor:pointer;">SALVAR
-                    NOVA ORDEM</button>
+                    ORDEM</button>
             </div>
         </div>
 
         <div id="pedidos" class="tab-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap: wrap;">
                 <h2>Gestão de Pedidos</h2>
                 <input type="text" id="search-order-input" placeholder="🔍 Buscar ID ou Cliente..."
                     style="width: 300px;">
             </div>
-
             <div id="order-list" class="list-container">
                 <p>Carregando pedidos...</p>
             </div>
@@ -385,16 +392,14 @@
             <form id="add-coupon-form" class="admin-form">
                 <div class="form-group">
                     <label>Código do Cupom</label>
-                    <input type="text" id="coupon-code" placeholder="Ex: FATAL10" required>
+                    <input type="text" id="coupon-code" required>
                 </div>
                 <div class="form-group">
-                    <label>Porcentagem de Desconto (%)</label>
-                    <input type="number" id="coupon-discount" placeholder="10" required>
+                    <label>Desconto (%)</label>
+                    <input type="number" id="coupon-discount" required>
                 </div>
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="coupon-free-shipping" style="width: auto;"> Frete Grátis?
-                    </label>
+                    <label><input type="checkbox" id="coupon-free-shipping" style="width: auto;"> Frete Grátis?</label>
                 </div>
                 <button type="submit" class="btn-save">Criar Cupom</button>
             </form>
@@ -409,38 +414,21 @@
 
     <div id="order-modal" class="modal-overlay">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeOrderModal()">&times;</span>
+            <span class="close-modal" onclick="closeOrderModal()"
+                style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.5rem;">&times;</span>
             <h2 id="modal-order-id">PEDIDO #...</h2>
-
-            <div style="border-top: 1px solid #333; margin-top: 15px; padding-top: 15px;">
-                <p><strong>Status Atual:</strong> <span id="modal-status-display">Pendente</span></p>
-                <p><strong>Data:</strong> <span id="modal-date">--/--/----</span></p>
-            </div>
-
-            <div
-                style="margin: 20px 0; padding: 15px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
-                <h3 style="color:#888; font-size:0.9rem; margin-bottom: 10px;">DADOS DO CLIENTE</h3>
-                <p><strong>Nome:</strong> <span id="modal-client-name"></span></p>
-                <p><strong>Email:</strong> <span id="modal-client-email"></span></p>
+            <div style="margin: 20px 0; padding: 15px; background: #1a1a1a; border: 1px solid #333;">
+                <p><strong>Status:</strong> <span id="modal-status-display"></span></p>
+                <p><strong>Cliente:</strong> <span id="modal-client-name"></span></p>
                 <p><strong>Endereço:</strong> <span id="modal-client-address"></span></p>
             </div>
-
-            <h3 style="color:#888; font-size:0.9rem; margin-bottom:10px;">ITENS DO PEDIDO</h3>
-            <div id="modal-items-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
-
-            <div style="text-align: right; border-top: 1px solid #333; padding-top: 10px;">
-                <p style="font-size: 1.2rem;">Total: <span id="modal-total" style="color: #0f0; font-weight: bold;">R$
-                        0,00</span></p>
-            </div>
-
-            <div style="margin-top: 25px; background: #151515; padding: 15px; border: 1px solid #333;">
-                <label style="font-size: 0.8rem; color: #888;">ALTERAR STATUS DO PEDIDO:</label>
-                <select id="modal-status-select" style="margin-bottom: 10px; margin-top: 5px;">
-                    <option value="Aguardando Pagamento (MP)">Aguardando Pagamento</option>
+            <div id="modal-items-list" style="margin-bottom: 20px;"></div>
+            <div style="text-align: right; font-size: 1.2rem;">Total: <span id="modal-total" style="color: #0f0;">R$
+                    0,00</span></div>
+            <div style="margin-top: 20px;">
+                <select id="modal-status-select" style="margin-bottom: 10px;">
                     <option value="Aprovado">Aprovado</option>
-                    <option value="Preparando">Preparando</option>
                     <option value="Enviado">Enviado</option>
-                    <option value="Entregue">Entregue</option>
                     <option value="Cancelado">Cancelado</option>
                 </select>
                 <button onclick="updateOrderStatus()" class="btn-save">Atualizar Status</button>
@@ -449,18 +437,30 @@
     </div>
 
     <script>
-        // Funções de UI (Abas)
+        // Controla Abas e Menu Mobile
         function showTab(tabId) {
             document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+
             document.getElementById(tabId).classList.add('active');
 
+            // Ativa o botão correto no menu
             const btns = document.querySelectorAll('.menu-btn');
             btns.forEach(btn => {
-                if (btn.getAttribute('onclick').includes(tabId)) {
+                if (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(tabId)) {
                     btn.classList.add('active');
                 }
             });
+        }
+
+        function toggleMenu() {
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                sidebar.classList.toggle('active');
+
+                const btn = document.querySelector('.mobile-menu-toggle');
+                btn.textContent = sidebar.classList.contains('active') ? 'FECHAR' : 'MENU';
+            }
         }
 
         function closeOrderModal() {
@@ -468,15 +468,20 @@
         }
 
         function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('isAdmin');
+            localStorage.clear();
             window.location.href = 'login.html';
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function (event) {
+            const modal = document.getElementById('order-modal');
+            if (event.target == modal) {
+                closeOrderModal();
+            }
         }
     </script>
 
     <script src="admin-logic.js"></script>
-
 </body>
 
 </html>
