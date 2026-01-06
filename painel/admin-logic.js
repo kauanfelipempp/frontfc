@@ -322,47 +322,32 @@ async function loadProducts() {
 async function handleProductSubmit(e) {
     e.preventDefault();
     const token = localStorage.getItem('token');
+    const btn = e.target.querySelector('button');
+    const originalText = btn.textContent;
 
-    // Referências dos campos com verificações de segurança
     const fileInput = document.getElementById('prod-file');
-    const nomeEl = document.getElementById('prod-nome');
-    const precoEl = document.getElementById('prod-preco');
-    const catEl = document.getElementById('prod-cat');
-    const colorEl = document.getElementById('colors');
-    const hiddenImgEl = document.getElementById('prod-imagem-hidden');
-
-    // Pegar variantes de tamanho (Checkboxes)
+    const nome = document.getElementById('prod-nome').value;
+    const preco = document.getElementById('prod-preco').value;
+    const categoria = document.getElementById('prod-cat').value;
+    const colors = document.getElementById('colors').value;
     const sizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(el => el.value);
 
-    // Pegar variantes de cor (Input de texto separado por vírgula)
-    const colors = colorEl ? colorEl.value.split(',').map(c => c.trim()).filter(c => c !== "") : [];
+    // FormData permite enviar o arquivo 'imagem' e campos de texto juntos
+    const formData = new FormData();
+    if (fileInput.files[0]) {
+        formData.append('imagem', fileInput.files[0]);
+    }
+    formData.append('nome', nome);
+    formData.append('preco', preco);
+    formData.append('categoria', categoria);
 
-    let imageUrl = hiddenImgEl ? hiddenImgEl.value : "";
+    // Convertemos arrays para string para que o multer/JSON.parse no backend funcionem
+    formData.append('colors', JSON.stringify(colors.split(',').map(c => c.trim())));
+    formData.append('sizes', JSON.stringify(sizes));
 
     try {
-        // 1. Upload da imagem se houver arquivo novo
-        if (fileInput && fileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
-
-            const upRes = await fetch(`${API_URL_ADMIN}/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': token },
-                body: formData
-            });
-            const upData = await upRes.json();
-            if (upRes.ok) imageUrl = upData.imageUrl;
-        }
-
-        // 2. Montar objeto do produto
-        const productData = {
-            nome: nomeEl.value,
-            preco: precoEl.value,
-            imagem: imageUrl,
-            categoria: catEl ? catEl.value : "",
-            sizes: sizes,
-            colors: colors
-        };
+        btn.textContent = "ENVIANDO...";
+        btn.disabled = true;
 
         let url = `${API_URL_ADMIN}/products`;
         let method = 'POST';
@@ -374,20 +359,25 @@ async function handleProductSubmit(e) {
 
         const res = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json', 'Authorization': token },
-            body: JSON.stringify(productData)
+            headers: { 'Authorization': token },
+            // Importante: Não defina Content-Type manualmente ao usar FormData
+            body: formData
         });
 
         if (res.ok) {
-            showToast(editingProductId ? "Produto atualizado!" : "Produto criado com sucesso!", "success");
+            showToast(editingProductId ? "Produto atualizado!" : "Produto criado!", "success");
             cancelEdit();
             loadProducts();
         } else {
-            showToast("Erro ao salvar produto.", "error");
+            const errData = await res.json();
+            showToast(errData.error || "Erro ao salvar.", "error");
         }
     } catch (err) {
         console.error(err);
-        showToast("Erro de conexão.", "error");
+        showToast("Erro de conexão com o servidor.", "error");
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
     }
 }
 
