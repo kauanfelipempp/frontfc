@@ -323,17 +323,25 @@ async function handleProductSubmit(e) {
     e.preventDefault();
     const token = localStorage.getItem('token');
 
+    // Referências dos campos com verificações de segurança
     const fileInput = document.getElementById('prod-file');
-    const nome = document.getElementById('prod-nome').value;
-    const preco = document.getElementById('prod-preco').value;
-    const categoria = document.getElementById('prod-cat').value;
-    const sizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(el => el.value);
-    const colors = document.getElementById('colors').value.split(',').map(c => c.trim());
+    const nomeEl = document.getElementById('prod-nome');
+    const precoEl = document.getElementById('prod-preco');
+    const catEl = document.getElementById('prod-cat');
+    const colorEl = document.getElementById('colors');
+    const hiddenImgEl = document.getElementById('prod-imagem-hidden');
 
-    let imageUrl = document.getElementById('prod-imagem-hidden')?.value || "";
+    // Pegar variantes de tamanho (Checkboxes)
+    const sizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(el => el.value);
+
+    // Pegar variantes de cor (Input de texto separado por vírgula)
+    const colors = colorEl ? colorEl.value.split(',').map(c => c.trim()).filter(c => c !== "") : [];
+
+    let imageUrl = hiddenImgEl ? hiddenImgEl.value : "";
 
     try {
-        if (fileInput.files.length > 0) {
+        // 1. Upload da imagem se houver arquivo novo
+        if (fileInput && fileInput.files.length > 0) {
             const formData = new FormData();
             formData.append('image', fileInput.files[0]);
 
@@ -346,7 +354,15 @@ async function handleProductSubmit(e) {
             if (upRes.ok) imageUrl = upData.imageUrl;
         }
 
-        const productData = { nome, preco, imagem: imageUrl, categoria, sizes, colors };
+        // 2. Montar objeto do produto
+        const productData = {
+            nome: nomeEl.value,
+            preco: precoEl.value,
+            imagem: imageUrl,
+            categoria: catEl ? catEl.value : "",
+            sizes: sizes,
+            colors: colors
+        };
 
         let url = `${API_URL_ADMIN}/products`;
         let method = 'POST';
@@ -369,7 +385,10 @@ async function handleProductSubmit(e) {
         } else {
             showToast("Erro ao salvar produto.", "error");
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        showToast("Erro de conexão.", "error");
+    }
 }
 
 window.startEdit = function (productStr) {
