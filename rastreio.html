@@ -213,39 +213,58 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        const API_URL = "https://fatalcompany.store/api";
 
         async function buscarPedido() {
-            // CORREÇÃO: Pega o valor e remove a tralha (#) se existir
-            const rawInput = document.getElementById('order-id-input').value.trim();
-            const idInput = rawInput.replace('#', '');
-
-            const resultArea = document.getElementById('result-area');
-            const loading = document.getElementById('loading');
-
-            if (!idInput) return alert("Digite o código do pedido!");
-
-            // Reset visual
-            resultArea.style.display = 'none';
-            loading.style.display = 'block';
+            const codigo = document.getElementById('tracking-input').value.trim();
+            if (!codigo) return;
 
             try {
-                const res = await fetch(`${API_URL}/tracking/${idInput}`);
-                const data = await res.json();
+                // Busca o pedido pelo ID (que é o código de rastreio interno do seu sistema)
+                const res = await fetch(`${API_URL}/public/orders/${codigo}`);
 
-                loading.style.display = 'none';
-
-                if (res.ok) {
-                    renderResult(data);
-                } else {
-                    alert(data.error || "Pedido não encontrado");
+                if (!res.ok) {
+                    throw new Error("Pedido não encontrado");
                 }
-            } catch (e) {
-                loading.style.display = 'none';
-                console.error(e);
-                alert("Erro de conexão. Tente novamente.");
+
+                const pedido = await res.json();
+                renderizarStatus(pedido); // Sua função que mostra o status na tela
+
+            } catch (error) {
+                console.error("Erro ao buscar:", error);
+                alert("Pedido não encontrado ou erro na conexão.");
             }
         }
+        // CORREÇÃO: Pega o valor e remove a tralha (#) se existir
+        const rawInput = document.getElementById('order-id-input').value.trim();
+        const idInput = rawInput.replace('#', '');
+
+        const resultArea = document.getElementById('result-area');
+        const loading = document.getElementById('loading');
+
+        if (!idInput) return alert("Digite o código do pedido!");
+
+        // Reset visual
+        resultArea.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+            const res = await fetch(`${API_URL}/tracking/${idInput}`);
+            const data = await res.json();
+
+            loading.style.display = 'none';
+
+            if (res.ok) {
+                renderResult(data);
+            } else {
+                alert(data.error || "Pedido não encontrado");
+            }
+        } catch (e) {
+            loading.style.display = 'none';
+            console.error(e);
+            alert("Erro de conexão. Tente novamente.");
+        }
+
 
         function renderResult(order) {
             document.getElementById('display-id').textContent = `PEDIDO #${order.id.slice(-6).toUpperCase()}`;
