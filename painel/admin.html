@@ -22,7 +22,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Desktop */
+        /* Sidebar */
         aside {
             width: 250px;
             background: #111;
@@ -30,13 +30,13 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            flex-shrink: 0;
         }
 
         aside h1 {
             margin-bottom: 40px;
             text-transform: uppercase;
             letter-spacing: 2px;
+            color: #fff;
             border-bottom: 1px solid #333;
             padding-bottom: 10px;
         }
@@ -62,12 +62,11 @@
             border-left: 3px solid white;
         }
 
-        /* Conteúdo Principal */
+        /* Conteúdo */
         main {
             flex: 1;
             padding: 40px;
             overflow-y: auto;
-            width: 100%;
         }
 
         .tab-section {
@@ -79,7 +78,19 @@
             display: block;
         }
 
-        /* Dashboard KPIs */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* KPIs (Os cartões do topo) */
         .kpi-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -105,7 +116,7 @@
             font-weight: bold;
         }
 
-        /* Formulários */
+        /* Formulários e Listas */
         .admin-form {
             background: #151515;
             padding: 30px;
@@ -118,14 +129,13 @@
             margin-bottom: 20px;
         }
 
-        .form-group label {
+        label {
             display: block;
             margin-bottom: 8px;
             color: #ccc;
         }
 
-        input[type="text"],
-        input[type="number"],
+        input,
         textarea,
         select {
             width: 100%;
@@ -134,30 +144,6 @@
             border: 1px solid #444;
             color: white;
             outline: none;
-        }
-
-        /* Checkbox Styling */
-        .checkbox-group {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            background: #222;
-            padding: 15px;
-            border: 1px solid #444;
-        }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            margin-bottom: 0;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
         }
 
         button.btn-save {
@@ -170,14 +156,17 @@
             text-transform: uppercase;
             width: 100%;
             margin-top: 10px;
-            transition: 0.2s;
         }
 
         button.btn-save:hover {
-            background: #ddd;
+            background: #ccc;
         }
 
-        /* Listas Responsivas */
+        /* Listas de Itens */
+        .list-container {
+            margin-top: 20px;
+        }
+
         .list-item {
             background: #111;
             padding: 15px;
@@ -186,76 +175,71 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+        }
+
+        .list-info {
+            flex: 1;
         }
 
         .delete-btn {
             background: #ff4444;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 5px 10px;
             cursor: pointer;
+            margin-left: 10px;
         }
 
-        /* --- MEDIA QUERIES PARA MOBILE --- */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-            }
-
-            aside {
-                width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #333;
-                padding: 10px;
-                flex-direction: row;
-                overflow-x: auto;
-                white-space: nowrap;
-                position: sticky;
-                top: 0;
-                z-index: 1000;
-            }
-
-            aside h1 {
-                display: none;
-            }
-
-            .menu-btn {
-                width: auto;
-                display: inline-block;
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
-
-            .menu-btn.active {
-                border-left: none;
-                border-bottom: 3px solid white;
-            }
-
-            main {
-                padding: 20px;
-            }
-
-            .kpi-container {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .form-row-mobile {
-                flex-direction: column;
-                gap: 0 !important;
-            }
+        /* Modal de Pedido Corrigido */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
+        .modal-content {
+            background: #111;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid #333;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Tags de Status */
+        .tag {
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .tag-admin {
+            background: purple;
+            color: #dda0dd;
+            border: 1px solid purple;
+        }
+
+        .tag-client {
+            background: #333;
+            color: #ccc;
         }
     </style>
 </head>
@@ -263,37 +247,46 @@
 <body>
 
     <aside>
-        <h1>Admin</h1>
-        <button class="menu-btn active" onclick="showTab('dashboard')">Painel</button>
+        <h1>Admin Panel</h1>
+        <button class="menu-btn active" onclick="showTab('dashboard')">Visão Geral</button>
         <button class="menu-btn" onclick="showTab('produtos')">Produtos</button>
         <button class="menu-btn" onclick="showTab('categorias')">Categorias</button>
         <button class="menu-btn" onclick="showTab('pedidos')">Pedidos</button>
         <button class="menu-btn" onclick="showTab('cupons')">Cupons</button>
         <button class="menu-btn" onclick="showTab('usuarios')">Usuários</button>
-        <button class="menu-btn" onclick="logout()" style="color: #ff4444;">Sair</button>
+
+        <div style="margin-top: auto;">
+            <button class="menu-btn" onclick="logout()" style="color: #ff4444;">Sair</button>
+        </div>
     </aside>
 
     <main>
         <div id="dashboard" class="tab-section active">
-            <h2>Visão Geral</h2>
+            <h2>Dashboard</h2>
             <div class="kpi-container">
                 <div class="kpi-card">
-                    <h3>Vendas</h3>
+                    <h3>Total de Vendas</h3>
                     <p id="kpi-money">R$ 0,00</p>
                 </div>
                 <div class="kpi-card">
-                    <h3>Pedidos</h3>
+                    <h3>Pedidos Realizados</h3>
                     <p id="kpi-orders">0</p>
                 </div>
                 <div class="kpi-card">
-                    <h3>Produtos</h3>
+                    <h3>Produtos Ativos</h3>
                     <p id="kpi-products">0</p>
                 </div>
+            </div>
+            <div style="padding: 20px; background: #151515; border: 1px solid #333;">
+                <h3>Bem-vindo de volta.</h3>
+                <p style="color: #888; margin-top: 10px;">Selecione uma opção no menu lateral para gerenciar sua loja.
+                </p>
             </div>
         </div>
 
         <div id="produtos" class="tab-section">
-            <h2>Gerenciar Produtos</h2>
+            <h2 style="margin-bottom: 20px;">Gerenciar Produtos</h2>
+
             <form id="add-product-form" class="admin-form">
                 <input type="hidden" id="prod-imagem-hidden">
 
@@ -302,73 +295,106 @@
                     <input type="text" id="prod-nome" required>
                 </div>
 
-                <div style="display: flex; gap: 20px;" class="form-row-mobile">
+                <div style="display: flex; gap: 20px;">
                     <div class="form-group" style="flex: 1;">
-                        <label>Preço</label>
+                        <label>Preço (R$)</label>
                         <input type="number" id="prod-preco" step="0.01" required>
                     </div>
                     <div class="form-group" style="flex: 1;">
                         <label>Categoria</label>
-                        <select id="prod-cat"></select>
+                        <select id="prod-cat">
+                            <option value="">Selecione uma categoria...</option>
+                        </select>
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Tamanhos Disponíveis</label>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" name="size" value="P"> P</label>
-                        <label><input type="checkbox" name="size" value="M"> M</label>
-                        <label><input type="checkbox" name="size" value="G"> G</label>
-                        <label><input type="checkbox" name="size" value="GG"> GG</label>
-                        <label><input type="checkbox" name="size" value="XG"> XG</label>
-                        <label><input type="checkbox" name="size" value="U"> Único</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Cores (Separe por vírgula: Preto, Branco, Vermelho)</label>
-                    <input type="text" id="colors" placeholder="Ex: Preto, Branco">
                 </div>
 
                 <div class="form-group">
                     <label>Imagem do Produto</label>
-                    <input type="file" id="prod-file">
+                    <input type="file" id="prod-file" accept="image/*">
                     <img id="preview-img"
-                        style="max-width: 100px; margin-top: 10px; display: none; border: 1px solid #555;">
+                        style="width: 100px; margin-top: 10px; display: none; border: 1px solid #333;">
                 </div>
 
-                <button type="submit" class="btn-save">Salvar Produto</button>
+                <div class="form-group">
+                    <label>Tamanhos Disponíveis</label>
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <label><input type="checkbox" name="size" value="P"> P</label>
+                        <label><input type="checkbox" name="size" value="M"> M</label>
+                        <label><input type="checkbox" name="size" value="G"> G</label>
+                        <label><input type="checkbox" name="size" value="GG"> GG</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Cores (Separadas por vírgula)</label>
+                    <input type="text" id="colors" placeholder="Ex: Preto, Branco, Vermelho">
+                </div>
+
+                <button type="submit" class="btn-save">Cadastrar Produto</button>
+                <button type="button" onclick="cancelEdit()"
+                    style="width:100%; padding:10px; background:transparent; border:1px solid #333; color:#888; margin-top:10px; cursor:pointer;">Cancelar
+                    / Limpar</button>
             </form>
 
-            <div id="admin-product-list" class="list-container"></div>
+            <div id="admin-product-list" class="list-container">
+            </div>
         </div>
 
         <div id="categorias" class="tab-section">
-            <h2>Categorias</h2>
+            <h2>Gerenciar Categorias</h2>
+
             <form id="add-category-form" class="admin-form">
-                <input type="text" id="cat-title" placeholder="Título da Categoria" required
-                    style="margin-bottom:10px;">
-                <button type="submit" class="btn-save">Criar Categoria</button>
+                <div class="form-group">
+                    <label>Título da Categoria</label>
+                    <input type="text" id="cat-title" placeholder="Ex: Camisetas Oversized" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição (opcional)</label>
+                    <textarea id="cat-desc" rows="3"
+                        style="width:100%; background:#222; border:1px solid #444; color:white;"
+                        placeholder="Descrição para SEO ou exibição no site"></textarea>
+                </div>
+                <button type="submit" class="btn-save">Salvar Categoria</button>
             </form>
-            <div id="category-list" class="list-container"></div>
+
+            <div style="background:#111; padding:15px; border:1px solid #333; margin-top:20px;">
+                <h3 style="color:#888; margin-bottom:15px; font-size:0.9rem;">ORDEM DE EXIBIÇÃO (Arraste ou use as
+                    setas)</h3>
+                <div id="category-list" class="list-container">
+                </div>
+                <button onclick="saveCategoryOrder()"
+                    style="margin-top:15px; background:#00bfff; border:none; padding:10px 20px; font-weight:bold; cursor:pointer;">SALVAR
+                    NOVA ORDEM</button>
+            </div>
         </div>
 
         <div id="pedidos" class="tab-section">
-            <div style="margin-bottom: 20px;">
-                <h2>Pedidos</h2>
-                <input type="text" id="search-order-input" placeholder="Buscar pedido por ID ou Cliente...">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2>Gestão de Pedidos</h2>
+                <input type="text" id="search-order-input" placeholder="🔍 Buscar ID ou Cliente..."
+                    style="width: 300px;">
             </div>
-            <div id="order-list" class="list-container"></div>
+
+            <div id="order-list" class="list-container">
+                <p>Carregando pedidos...</p>
+            </div>
         </div>
 
         <div id="cupons" class="tab-section">
             <h2>Cupons de Desconto</h2>
             <form id="add-coupon-form" class="admin-form">
-                <div class="form-group"><label>Código</label><input type="text" id="coupon-code" required></div>
-                <div class="form-group"><label>Desconto (%)</label><input type="number" id="coupon-discount" required>
+                <div class="form-group">
+                    <label>Código do Cupom</label>
+                    <input type="text" id="coupon-code" placeholder="Ex: FATAL10" required>
                 </div>
-                <div class="form-group" style="display:flex; align-items:center; gap:10px;">
-                    <input type="checkbox" id="coupon-free-shipping" style="width:auto;"> <label>Frete Grátis</label>
+                <div class="form-group">
+                    <label>Porcentagem de Desconto (%)</label>
+                    <input type="number" id="coupon-discount" placeholder="10" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="coupon-free-shipping" style="width: auto;"> Frete Grátis?
+                    </label>
                 </div>
                 <button type="submit" class="btn-save">Criar Cupom</button>
             </form>
@@ -379,36 +405,78 @@
             <h2>Usuários Cadastrados</h2>
             <div id="user-list" class="list-container"></div>
         </div>
-
-        <div id="order-modal" class="modal-overlay">
-            <div class="modal-content">
-                <span onclick="closeOrderModal()" style="float:right; cursor:pointer; font-weight: bold;">X</span>
-                <h2 id="modal-order-id">Pedido</h2>
-                <div id="modal-items-list" style="margin: 20px 0;"></div>
-                <label>Status do Pedido:</label>
-                <select id="modal-status-select"></select>
-                <button onclick="updateOrderStatus()" class="btn-save" style="margin-top:20px;">Atualizar
-                    Status</button>
-            </div>
-        </div>
     </main>
 
-    <script src="admin-logic.js"></script>
-    <script>
-        function showTab(tabId) {
-            const targetTab = document.getElementById(tabId);
-            if (!targetTab) return;
+    <div id="order-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeOrderModal()">&times;</span>
+            <h2 id="modal-order-id">PEDIDO #...</h2>
 
+            <div style="border-top: 1px solid #333; margin-top: 15px; padding-top: 15px;">
+                <p><strong>Status Atual:</strong> <span id="modal-status-display">Pendente</span></p>
+                <p><strong>Data:</strong> <span id="modal-date">--/--/----</span></p>
+            </div>
+
+            <div
+                style="margin: 20px 0; padding: 15px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
+                <h3 style="color:#888; font-size:0.9rem; margin-bottom: 10px;">DADOS DO CLIENTE</h3>
+                <p><strong>Nome:</strong> <span id="modal-client-name"></span></p>
+                <p><strong>Email:</strong> <span id="modal-client-email"></span></p>
+                <p><strong>Endereço:</strong> <span id="modal-client-address"></span></p>
+            </div>
+
+            <h3 style="color:#888; font-size:0.9rem; margin-bottom:10px;">ITENS DO PEDIDO</h3>
+            <div id="modal-items-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
+
+            <div style="text-align: right; border-top: 1px solid #333; padding-top: 10px;">
+                <p style="font-size: 1.2rem;">Total: <span id="modal-total" style="color: #0f0; font-weight: bold;">R$
+                        0,00</span></p>
+            </div>
+
+            <div style="margin-top: 25px; background: #151515; padding: 15px; border: 1px solid #333;">
+                <label style="font-size: 0.8rem; color: #888;">ALTERAR STATUS DO PEDIDO:</label>
+                <select id="modal-status-select" style="margin-bottom: 10px; margin-top: 5px;">
+                    <option value="Aguardando Pagamento (MP)">Aguardando Pagamento</option>
+                    <option value="Aprovado">Aprovado</option>
+                    <option value="Preparando">Preparando</option>
+                    <option value="Enviado">Enviado</option>
+                    <option value="Entregue">Entregue</option>
+                    <option value="Cancelado">Cancelado</option>
+                </select>
+                <button onclick="updateOrderStatus()" class="btn-save">Atualizar Status</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funções de UI (Abas)
+        function showTab(tabId) {
             document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
 
-            targetTab.classList.add('active');
+            const btns = document.querySelectorAll('.menu-btn');
+            btns.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
 
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
+        function closeOrderModal() {
+            document.getElementById('order-modal').style.display = 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('isAdmin');
+            window.location.href = 'login.html';
         }
     </script>
+
+    <script src="admin-logic.js"></script>
+
 </body>
 
 </html>
