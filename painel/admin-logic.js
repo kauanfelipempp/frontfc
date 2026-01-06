@@ -1,5 +1,5 @@
 // admin-logic.js
-var API_URL_ADMIN = 'http://localhost:3000/api';
+var API_URL_ADMIN = 'https://serverfc.onrender.com/api';
 
 // Variáveis de Estado
 let editingProductId = null;
@@ -20,6 +20,7 @@ function ensureToastContainer() {
 window.showToast = function (message, type = 'success') {
     ensureToastContainer();
     const container = document.getElementById('toast-container');
+    if (!container) return;
 
     const toast = document.createElement('div');
     toast.className = `custom-toast toast-${type}`;
@@ -101,8 +102,6 @@ window.showPrompt = function (title, text) {
     });
 };
 
-/* --- INICIALIZAÇÃO --- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const isAdmin = localStorage.getItem('isAdmin');
@@ -125,29 +124,43 @@ function setupListeners() {
     const couponForm = document.getElementById('add-coupon-form');
     if (couponForm) couponForm.addEventListener('submit', handleCouponSubmit);
 
+    // CORREÇÃO: Listener de Categorias com verificação de campos nulos
     const catForm = document.getElementById('add-category-form');
     if (catForm) {
         catForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('token');
+
+            const titleEl = document.getElementById('cat-title');
+            const descEl = document.getElementById('cat-desc');
+
             const data = {
-                title: document.getElementById('cat-title').value,
-                description: document.getElementById('cat-desc').value
+                title: titleEl ? titleEl.value : "",
+                description: descEl ? descEl.value : ""
             };
 
+            if (!data.title) {
+                showToast("O título da categoria é obrigatório.", "error");
+                return;
+            }
+
             try {
-                await fetch(`${API_URL_ADMIN}/categories`, {
+                const res = await fetch(`${API_URL_ADMIN}/categories`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': token },
                     body: JSON.stringify(data)
                 });
 
-                catForm.reset();
-                loadCategories();
-                showToast("Categoria criada com sucesso!", "success");
+                if (res.ok) {
+                    catForm.reset();
+                    loadCategories();
+                    showToast("Categoria criada com sucesso!", "success");
+                } else {
+                    showToast("Erro ao criar categoria.", "error");
+                }
             } catch (err) {
                 console.error(err);
-                showToast("Erro ao criar categoria.", "error");
+                showToast("Erro ao conectar com o servidor.", "error");
             }
         });
     }
@@ -167,8 +180,7 @@ function loadData() {
     loadCoupons();
 }
 
-/* --- DASHBOARD --- */
-
+// --- DASHBOARD ---
 async function loadDashboard() {
     try {
         const token = localStorage.getItem('token');
@@ -178,6 +190,7 @@ async function loadDashboard() {
         if (!res.ok) return;
 
         const orders = await res.json();
+
         const kpiOrders = document.getElementById('kpi-orders');
         const kpiMoney = document.getElementById('kpi-money');
 
@@ -189,7 +202,7 @@ async function loadDashboard() {
     } catch (e) { console.error("Erro dashboard:", e); }
 }
 
-/* --- CATEGORIAS --- */
+// --- CATEGORIAS ---
 
 async function loadCategories() {
     try {
@@ -272,36 +285,69 @@ function updateProductSelect() {
     if (currentValue) select.value = currentValue;
 }
 
-/* --- PRODUTOS --- */
+// --- PRODUTOS ---
+
+async function loadProducts() {
+    try {
+        const res = await fetch(`${API_URL_ADMIN}/products`);
+        const products = await res.json();
+        const list = document.getElementById('admin-product-list');
+
+        if (list) {
+            list.innerHTML = products.map(p => {
+                const pString = encodeURIComponent(JSON.stringify(p));
+                return `
+                <div class="list-item">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${p.imagem}" style="width:40px; height:40px; object-fit:cover;">
+                        <div class="list-info">
+                            <strong>${p.nome}</strong>
+                            <small>R$ ${Number(p.preco).toFixed(2)}</small>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="edit-btn" onclick="startEdit('${pString}')" style="margin-right:5px; cursor:pointer;">✏️</button>
+                        <button class="delete-btn" onclick="deleteProduct('${p._id}')">X</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        const kpiProd = document.getElementById('kpi-products');
+        if (kpiProd) kpiProd.textContent = products.length;
+
+    } catch (e) { console.error(e); }
+}
 
 async function handleProductSubmit(e) {
     e.preventDefault();
     const token = localStorage.getItem('token');
+    const btn = e.target.querySelector('button');
+    const originalText = btn.textContent;
 
     const fileInput = document.getElementById('prod-file');
     const nome = document.getElementById('prod-nome').value;
     const preco = document.getElementById('prod-preco').value;
     const categoria = document.getElementById('prod-cat').value;
+    const colors = document.getElementById('colors').value;
     const sizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(el => el.value);
-    const colors = document.getElementById('colors').value.split(',').map(c => c.trim());
 
-    let imageUrl = document.getElementById('prod-imagem-hidden')?.value || "";
+    // FormData permite enviar o arquivo 'imagem' e campos de texto juntos
+    const formData = new FormData();
+    if (fileInput.files[0]) {
+        formData.append('imagem', fileInput.files[0]);
+    }
+    formData.append('nome', nome);
+    formData.append('preco', preco);
+    formData.append('categoria', categoria);
+
+    // Convertemos arrays para string para que o multer/JSON.parse no backend funcionem
+    formData.append('colors', JSON.stringify(colors.split(',').map(c => c.trim())));
+    formData.append('sizes', JSON.stringify(sizes));
 
     try {
-        if (fileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
-
-            const upRes = await fetch(`${API_URL_ADMIN}/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': token },
-                body: formData
-            });
-            const upData = await upRes.json();
-            if (upRes.ok) imageUrl = upData.imageUrl;
-        }
-
-        const productData = { nome, preco, imagem: imageUrl, categoria, sizes, colors };
+        btn.textContent = "ENVIANDO...";
+        btn.disabled = true;
 
         let url = `${API_URL_ADMIN}/products`;
         let method = 'POST';
@@ -313,18 +359,26 @@ async function handleProductSubmit(e) {
 
         const res = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json', 'Authorization': token },
-            body: JSON.stringify(productData)
+            headers: { 'Authorization': token },
+            // Importante: Não defina Content-Type manualmente ao usar FormData
+            body: formData
         });
 
         if (res.ok) {
-            showToast(editingProductId ? "Produto atualizado!" : "Produto criado com sucesso!", "success");
+            showToast(editingProductId ? "Produto atualizado!" : "Produto criado!", "success");
             cancelEdit();
             loadProducts();
         } else {
-            showToast("Erro ao salvar produto.", "error");
+            const errData = await res.json();
+            showToast(errData.error || "Erro ao salvar.", "error");
         }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+        showToast("Erro de conexão com o servidor.", "error");
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
 }
 
 window.startEdit = function (productStr) {
@@ -336,7 +390,6 @@ window.startEdit = function (productStr) {
 
     updateProductSelect();
     document.getElementById('prod-cat').value = p.categoria || "";
-
     document.getElementById('prod-imagem-hidden').value = p.imagem;
     document.getElementById('colors').value = p.colors ? p.colors.join(', ') : "";
 
@@ -345,53 +398,33 @@ window.startEdit = function (productStr) {
     });
 
     const btn = document.querySelector('#add-product-form button');
-    btn.textContent = "SALVAR ALTERAÇÕES";
-    btn.style.background = "#ff9900";
+    if (btn) {
+        btn.textContent = "SALVAR ALTERAÇÕES";
+        btn.style.background = "#ff9900";
+    }
 
     const preview = document.getElementById('preview-img');
-    preview.src = p.imagem;
-    preview.style.display = 'block';
+    if (preview) {
+        preview.src = p.imagem;
+        preview.style.display = 'block';
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 function cancelEdit() {
     editingProductId = null;
-    document.getElementById('add-product-form').reset();
-    document.getElementById('preview-img').style.display = 'none';
+    const form = document.getElementById('add-product-form');
+    if (form) form.reset();
+
+    const preview = document.getElementById('preview-img');
+    if (preview) preview.style.display = 'none';
+
     const btn = document.querySelector('#add-product-form button');
-    btn.textContent = "CADASTRAR PRODUTO";
-    btn.style.background = "white";
-}
-
-async function loadProducts() {
-    try {
-        const res = await fetch(`${API_URL_ADMIN}/products`);
-        const products = await res.json();
-        const list = document.getElementById('admin-product-list');
-
-        list.innerHTML = products.map(p => {
-            const pString = encodeURIComponent(JSON.stringify(p));
-            return `
-            <div class="list-item">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="${p.imagem}" style="width:40px; height:40px; object-fit:cover;">
-                    <div class="list-info">
-                        <strong>${p.nome}</strong>
-                        <small>R$ ${Number(p.preco).toFixed(2)}</small>
-                    </div>
-                </div>
-                <div>
-                    <button class="edit-btn" onclick="startEdit('${pString}')" style="margin-right:5px; cursor:pointer;">✏️</button>
-                    <button class="delete-btn" onclick="deleteProduct('${p._id}')">X</button>
-                </div>
-            </div>`;
-        }).join('');
-
-        const kpiProd = document.getElementById('kpi-products');
-        if (kpiProd) kpiProd.textContent = products.length;
-
-    } catch (e) { console.error(e); }
+    if (btn) {
+        btn.textContent = "CADASTRAR PRODUTO";
+        btn.style.background = "white";
+    }
 }
 
 window.deleteProduct = async function (id) {
@@ -405,7 +438,7 @@ window.deleteProduct = async function (id) {
     showToast("Produto removido!", "success");
 };
 
-/* --- PEDIDOS (LOGICA CORRIGIDA) --- */
+// --- PEDIDOS ---
 
 async function loadOrders() {
     try {
@@ -428,6 +461,8 @@ async function loadOrders() {
 
 function renderOrderList(lista) {
     const listEl = document.getElementById('order-list');
+    if (!listEl) return;
+
     if (lista.length === 0) {
         listEl.innerHTML = '<p style="color:#666; text-align:center; padding:20px;">Nenhum pedido encontrado.</p>';
         return;
@@ -469,23 +504,17 @@ window.filterOrders = function () {
     renderOrderList(filtered);
 };
 
-// --- FUNÇÃO CORRIGIDA ---
 window.openOrderModal = function (index) {
     const order = ordersData[index];
-    if (!order) return;
     currentOrderId = order._id;
 
-    // Preenchimento com verificações de segurança (?.)
     document.getElementById('modal-order-id').textContent = `PEDIDO #${order._id.slice(-6).toUpperCase()}`;
     document.getElementById('modal-status-select').value = order.status || 'Pendente';
-
-    // CORREÇÃO: Verifica se cliente existe antes de acessar propriedades
-    document.getElementById('modal-client-name').textContent = order.cliente?.nome || "Não informado";
-    document.getElementById('modal-client-email').textContent = order.cliente?.email || "Não informado";
-    document.getElementById('modal-client-address').textContent = order.cliente?.endereco || "Não informado";
-
+    document.getElementById('modal-client-name').textContent = order.cliente.nome;
+    document.getElementById('modal-client-email').textContent = order.cliente.email;
+    document.getElementById('modal-client-address').textContent = order.cliente.endereco;
     document.getElementById('modal-date').textContent = new Date(order.data).toLocaleString();
-    document.getElementById('modal-total').textContent = `R$ ${Number(order.total || 0).toFixed(2)}`;
+    document.getElementById('modal-total').textContent = `R$ ${order.total.toFixed(2)}`;
 
     const itemsContainer = document.getElementById('modal-items-list');
     const listaItens = order.itens || order.items || [];
@@ -494,15 +523,15 @@ window.openOrderModal = function (index) {
         itemsContainer.innerHTML = listaItens.map(i => `
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:10px 0;">
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="background:#222; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; color: white; font-weight: bold;">
+                    <div style="background:#222; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; color: white;">
                         ${i.qty}x
                     </div>
                     <div>
                         <div style="color:white; font-weight:bold;">${i.nome}</div>
-                        <div style="color:#888; font-size:0.8rem;">${i.size || 'U'} / ${i.color || 'N/A'}</div>
+                        <div style="color:#888; font-size:0.8rem;">Tam: ${i.size || 'U'} | Cor: ${i.color || 'N/A'}</div>
                     </div>
                 </div>
-                <div style="font-weight:bold;">R$ ${(Number(i.preco || 0) * i.qty).toFixed(2)}</div>
+                <div style="font-weight:bold;">R$ ${(i.preco * i.qty).toFixed(2)}</div>
             </div>
         `).join('');
     }
@@ -512,11 +541,15 @@ window.openOrderModal = function (index) {
 };
 
 window.closeOrderModal = function () {
-    document.getElementById('order-modal').style.display = 'none';
+    const modal = document.getElementById('order-modal');
+    if (modal) modal.style.display = 'none';
 };
 
 window.updateOrderStatus = async function () {
-    const newStatus = document.getElementById('modal-status-select').value;
+    const statusSelect = document.getElementById('modal-status-select');
+    if (!statusSelect) return;
+
+    const newStatus = statusSelect.value;
     const token = localStorage.getItem('token');
     let trackingCode = "";
 
@@ -538,23 +571,25 @@ window.updateOrderStatus = async function () {
         if (res.ok) {
             showToast("Status atualizado com sucesso!", "success");
             loadOrders();
-            const select = document.getElementById('modal-status-select');
-            select.style.borderColor = '#00ff00';
-            setTimeout(() => select.style.borderColor = '#333', 1000);
+            statusSelect.style.borderColor = '#00ff00';
+            setTimeout(() => statusSelect.style.borderColor = '#333', 1000);
         } else {
             showToast("Erro ao atualizar status", "error");
         }
     } catch (e) { console.error(e); }
 };
 
-/* --- USUÁRIOS E CUPONS --- */
+// --- USUÁRIOS E CUPONS ---
 
 async function loadUsers() {
     try {
         const token = localStorage.getItem('token');
         const res = await fetch(`${API_URL_ADMIN}/users`, { headers: { 'Authorization': token } });
         const users = await res.json();
+
         const list = document.getElementById('user-list');
+        if (!list) return;
+
         list.innerHTML = users.map(u =>
             `<div class="list-item">
                 <div class="list-info"><strong>${u.nome}</strong><small>${u.email}</small></div>
@@ -588,7 +623,9 @@ async function loadCoupons() {
         const token = localStorage.getItem('token');
         const res = await fetch(`${API_URL_ADMIN}/coupons`, { headers: { 'Authorization': token } });
         const coupons = await res.json();
+
         const list = document.getElementById('coupon-list');
+        if (!list) return;
 
         list.innerHTML = coupons.map(c => {
             const freeShippingBadge = c.freeShipping
@@ -630,7 +667,10 @@ function setupImagePreview() {
             const file = this.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = e => { previewImg.src = e.target.result; previewImg.style.display = 'block'; };
+                reader.onload = e => {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                };
                 reader.readAsDataURL(file);
             }
         });
