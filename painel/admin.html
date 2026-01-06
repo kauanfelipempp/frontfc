@@ -414,21 +414,39 @@
 
     <div id="order-modal" class="modal-overlay">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeOrderModal()"
-                style="position:absolute; top:15px; right:20px; cursor:pointer; font-size:1.5rem;">&times;</span>
+            <span class="close-modal" onclick="closeOrderModal()">&times;</span>
             <h2 id="modal-order-id">PEDIDO #...</h2>
-            <div style="margin: 20px 0; padding: 15px; background: #1a1a1a; border: 1px solid #333;">
-                <p><strong>Status:</strong> <span id="modal-status-display"></span></p>
-                <p><strong>Cliente:</strong> <span id="modal-client-name"></span></p>
+
+            <div style="border-top: 1px solid #333; margin-top: 15px; padding-top: 15px;">
+                <p><strong>Status Atual:</strong> <span id="modal-status-display">Pendente</span></p>
+                <p><strong>Data:</strong> <span id="modal-date">--/--/----</span></p>
+            </div>
+
+            <div
+                style="margin: 20px 0; padding: 15px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
+                <h3 style="color:#888; font-size:0.9rem; margin-bottom: 10px;">DADOS DO CLIENTE</h3>
+                <p><strong>Nome:</strong> <span id="modal-client-name"></span></p>
+                <p><strong>Email:</strong> <span id="modal-client-email"></span></p>
                 <p><strong>Endereço:</strong> <span id="modal-client-address"></span></p>
             </div>
-            <div id="modal-items-list" style="margin-bottom: 20px;"></div>
-            <div style="text-align: right; font-size: 1.2rem;">Total: <span id="modal-total" style="color: #0f0;">R$
-                    0,00</span></div>
-            <div style="margin-top: 20px;">
-                <select id="modal-status-select" style="margin-bottom: 10px;">
+
+            <h3 style="color:#888; font-size:0.9rem; margin-bottom:10px;">ITENS DO PEDIDO</h3>
+            <div id="modal-items-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;"></div>
+
+            <div style="text-align: right; border-top: 1px solid #333; padding-top: 10px;">
+                <p style="font-size: 1.2rem;">Total: <span id="modal-total" style="color: #0f0; font-weight: bold;">R$
+                        0,00</span></p>
+            </div>
+
+            <div style="margin-top: 25px; background: #151515; padding: 15px; border: 1px solid #333;">
+                <label style="font-size: 0.8rem; color: #888;">ALTERAR STATUS DO PEDIDO:</label>
+                <select id="modal-status-select"
+                    style="margin-bottom: 10px; margin-top: 5px; width: 100%; padding: 10px; background: #222; color: white; border: 1px solid #444;">
+                    <option value="Aguardando Pagamento (MP)">Aguardando Pagamento</option>
                     <option value="Aprovado">Aprovado</option>
+                    <option value="Preparando">Preparando</option>
                     <option value="Enviado">Enviado</option>
+                    <option value="Entregue">Entregue</option>
                     <option value="Cancelado">Cancelado</option>
                 </select>
                 <button onclick="updateOrderStatus()" class="btn-save">Atualizar Status</button>
