@@ -124,13 +124,11 @@ function setupListeners() {
     const couponForm = document.getElementById('add-coupon-form');
     if (couponForm) couponForm.addEventListener('submit', handleCouponSubmit);
 
-    // CORREÇÃO: Listener de Categorias com verificação de campos nulos
     const catForm = document.getElementById('add-category-form');
     if (catForm) {
         catForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('token');
-
             const titleEl = document.getElementById('cat-title');
             const descEl = document.getElementById('cat-desc');
 
@@ -190,7 +188,6 @@ async function loadDashboard() {
         if (!res.ok) return;
 
         const orders = await res.json();
-
         const kpiOrders = document.getElementById('kpi-orders');
         const kpiMoney = document.getElementById('kpi-money');
 
@@ -332,7 +329,6 @@ async function handleProductSubmit(e) {
     const colors = document.getElementById('colors').value;
     const sizes = Array.from(document.querySelectorAll('input[name="size"]:checked')).map(el => el.value);
 
-    // FormData permite enviar o arquivo 'imagem' e campos de texto juntos
     const formData = new FormData();
     if (fileInput.files[0]) {
         formData.append('imagem', fileInput.files[0]);
@@ -340,8 +336,6 @@ async function handleProductSubmit(e) {
     formData.append('nome', nome);
     formData.append('preco', preco);
     formData.append('categoria', categoria);
-
-    // Convertemos arrays para string para que o multer/JSON.parse no backend funcionem
     formData.append('colors', JSON.stringify(colors.split(',').map(c => c.trim())));
     formData.append('sizes', JSON.stringify(sizes));
 
@@ -360,7 +354,6 @@ async function handleProductSubmit(e) {
         const res = await fetch(url, {
             method: method,
             headers: { 'Authorization': token },
-            // Importante: Não defina Content-Type manualmente ao usar FormData
             body: formData
         });
 
@@ -390,7 +383,6 @@ window.startEdit = function (productStr) {
 
     updateProductSelect();
     document.getElementById('prod-cat').value = p.categoria || "";
-    document.getElementById('prod-imagem-hidden').value = p.imagem;
     document.getElementById('colors').value = p.colors ? p.colors.join(', ') : "";
 
     document.querySelectorAll('input[name="size"]').forEach(cb => {
@@ -504,17 +496,22 @@ window.filterOrders = function () {
     renderOrderList(filtered);
 };
 
+// CORREÇÃO: Função de Modal de Pedido com Segurança Máxima
 window.openOrderModal = function (index) {
     const order = ordersData[index];
+    if (!order) return;
     currentOrderId = order._id;
 
     document.getElementById('modal-order-id').textContent = `PEDIDO #${order._id.slice(-6).toUpperCase()}`;
     document.getElementById('modal-status-select').value = order.status || 'Pendente';
-    document.getElementById('modal-client-name').textContent = order.cliente.nome;
-    document.getElementById('modal-client-email').textContent = order.cliente.email;
-    document.getElementById('modal-client-address').textContent = order.cliente.endereco;
+
+    // Verifica se cliente existe antes de acessar propriedades
+    document.getElementById('modal-client-name').textContent = order.cliente?.nome || "Não informado";
+    document.getElementById('modal-client-email').textContent = order.cliente?.email || "Não informado";
+    document.getElementById('modal-client-address').textContent = order.cliente?.endereco || "Não informado";
+
     document.getElementById('modal-date').textContent = new Date(order.data).toLocaleString();
-    document.getElementById('modal-total').textContent = `R$ ${order.total.toFixed(2)}`;
+    document.getElementById('modal-total').textContent = `R$ ${Number(order.total || 0).toFixed(2)}`;
 
     const itemsContainer = document.getElementById('modal-items-list');
     const listaItens = order.itens || order.items || [];
@@ -523,7 +520,7 @@ window.openOrderModal = function (index) {
         itemsContainer.innerHTML = listaItens.map(i => `
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:10px 0;">
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="background:#222; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; color: white;">
+                    <div style="background:#222; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; color: white; font-weight: bold;">
                         ${i.qty}x
                     </div>
                     <div>
@@ -531,7 +528,7 @@ window.openOrderModal = function (index) {
                         <div style="color:#888; font-size:0.8rem;">Tam: ${i.size || 'U'} | Cor: ${i.color || 'N/A'}</div>
                     </div>
                 </div>
-                <div style="font-weight:bold;">R$ ${(i.preco * i.qty).toFixed(2)}</div>
+                <div style="font-weight:bold;">R$ ${(Number(i.preco || 0) * i.qty).toFixed(2)}</div>
             </div>
         `).join('');
     }
